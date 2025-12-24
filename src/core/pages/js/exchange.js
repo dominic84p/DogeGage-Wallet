@@ -482,8 +482,18 @@ async function executeExchange() {
 async function autoSendToExchange(exchange) {
     try {
         const fromCurrency = exchangeState.fromCurrency;
-        const amount = exchange.fromAmount;
+        const amount = exchangeState.fromAmount; // Use user's input, not API response
         const toAddress = exchange.payinAddress;
+        
+        // Validate the exchange response matches user's intent
+        if (parseFloat(exchange.fromAmount) !== parseFloat(amount)) {
+            throw new Error('Exchange amount mismatch. Please try again.');
+        }
+        
+        // Validate payin address format
+        if (!isValidAddress(toAddress, fromCurrency)) {
+            throw new Error('Invalid payin address from exchange service');
+        }
         
         // Send based on currency type
         let txHash;
@@ -521,12 +531,12 @@ async function autoSendToExchange(exchange) {
         
         let errorMsg = error.message;
         if (errorMsg.includes('No UTXOs available')) {
-            errorMsg = `Your ${exchange.fromCurrency.toUpperCase()} wallet is empty or has no confirmed transactions. Please add funds first.`;
+            errorMsg = `Your ${exchangeState.fromCurrency.toUpperCase()} wallet is empty or has no confirmed transactions. Please add funds first.`;
         } else if (errorMsg.includes('Insufficient balance')) {
-            errorMsg = `Insufficient ${exchange.fromCurrency.toUpperCase()} balance.`;
+            errorMsg = `Insufficient ${exchangeState.fromCurrency.toUpperCase()} balance.`;
         }
         
-        alert(`Failed to send: ${errorMsg}\n\nExchange created but not funded. You can manually send ${exchange.fromAmount} ${exchange.fromCurrency.toUpperCase()} to:\n${exchange.payinAddress}`);
+        alert(`Failed to send: ${errorMsg}\n\nExchange created but not funded. You can manually send ${exchangeState.fromAmount} ${exchangeState.fromCurrency.toUpperCase()} to:\n${exchange.payinAddress}`);
     }
 }
 

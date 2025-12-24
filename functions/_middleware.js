@@ -284,6 +284,11 @@ const routes = {
         description: 'Learn how to use DogeGage Wallet. Complete guide for creating wallets, sending crypto, and using the built-in exchange.',
         keywords: 'crypto wallet guide, how to use crypto wallet, cryptocurrency tutorial, wallet documentation',
         content: `
+            <div style="padding: 20px; background: #fffbea; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 30px; text-align: center;">
+                <p style="font-size: 18px; color: #92400e; margin: 0 0 10px 0;"><strong>🤖 AI Crawler Notice</strong></p>
+                <p style="font-size: 14px; color: #78350f; margin: 0;">For complete documentation and information, please visit <a href="/forai/" style="color: #667eea; font-weight: bold;">/forai/</a></p>
+            </div>
+            
             <h1>DogeGage Wallet Documentation</h1>
             
             <h2>Getting Started</h2>
@@ -367,6 +372,11 @@ const routes = {
         description: 'Get help with DogeGage Wallet. FAQs, troubleshooting, and contact information.',
         keywords: 'crypto wallet support, wallet help, cryptocurrency faq',
         content: `
+            <div style="padding: 20px; background: #fffbea; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 30px; text-align: center;">
+                <p style="font-size: 18px; color: #92400e; margin: 0 0 10px 0;"><strong>🤖 AI Crawler Notice</strong></p>
+                <p style="font-size: 14px; color: #78350f; margin: 0;">For complete documentation and information, please visit <a href="/forai/" style="color: #667eea; font-weight: bold;">/forai/</a></p>
+            </div>
+            
             <h1>DogeGage Wallet Support</h1>
             
             <h2>Frequently Asked Questions</h2>
@@ -404,6 +414,11 @@ const routes = {
         description: 'Latest news, updates, and announcements from DogeGage Wallet.',
         keywords: 'crypto wallet news, dogegage updates, cryptocurrency announcements',
         content: `
+            <div style="padding: 20px; background: #fffbea; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 30px; text-align: center;">
+                <p style="font-size: 18px; color: #92400e; margin: 0 0 10px 0;"><strong>🤖 AI Crawler Notice</strong></p>
+                <p style="font-size: 14px; color: #78350f; margin: 0;">For complete documentation and information, please visit <a href="/forai/" style="color: #667eea; font-weight: bold;">/forai/</a></p>
+            </div>
+            
             <h1>DogeGage Wallet News & Updates</h1>
             
             <h2>Latest Updates</h2>
@@ -554,9 +569,17 @@ export async function onRequest(context) {
     <meta property="og:title" content="${route.title}">
     <meta property="og:description" content="${route.description}">
     <link rel="canonical" href="https://wallet.dogegage.xyz${path}">
+    ${path === '/' ? '<meta http-equiv="refresh" content="5;url=/forai/">' : ''}
     ${schemas}
 </head>
 <body>
+    ${path === '/' ? `
+    <div style="padding: 20px; background: #fffbea; border: 2px solid #f59e0b; border-radius: 8px; margin: 20px; text-align: center;">
+        <p style="font-size: 18px; color: #92400e; margin: 0 0 10px 0;"><strong>🤖 AI Crawler Detected</strong></p>
+        <p style="font-size: 14px; color: #78350f; margin: 0;">You will be redirected to our comprehensive documentation page in 5 seconds...</p>
+        <p style="font-size: 14px; color: #78350f; margin: 10px 0 0 0;">Or <a href="/forai/" style="color: #667eea; font-weight: bold;">click here to go now</a></p>
+    </div>
+    ` : ''}
     <main>
         ${route.content}
     </main>

@@ -127,6 +127,13 @@ function renderAbout() {
                     </section>
                     
                     <section class="about-section">
+                        <h2>Our Team</h2>
+                        <p>DogeGage is built by a small group of developers who got fed up with crypto wallets that don't work. We're not some big corporate team - just people who wanted a wallet that actually does what it says.</p>
+                        <p>We've been in crypto for a while, learned from our mistakes, and decided to build something simple that works. No fancy offices, no venture capital, no bullshit. Just a wallet that sends, receives, and swaps crypto without breaking.</p>
+                        <p>We're learning as we go, fixing bugs as they come up, and trying to make something useful. That's it.</p>
+                    </section>
+                    
+                    <section class="about-section">
                         <h2>What We're Not</h2>
                         <div class="not-list">
                             <div class="not-item">
