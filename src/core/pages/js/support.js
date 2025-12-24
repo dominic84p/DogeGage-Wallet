@@ -3,6 +3,63 @@ function renderSupport() {
     // Load tawk.to chat widget
     loadTawkTo();
     
+    // Add FAQ structured data for SEO
+    const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Is DogeGage Wallet safe?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! DogeGage is a non-custodial wallet using industry-standard BIP39 seed phrases. Everything is stored locally on your device. We never see or store your private keys. Your seed phrase is encrypted with AES-256 encryption."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What cryptocurrencies are supported?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "DogeGage Wallet supports 8 cryptocurrencies: Bitcoin (BTC), Ethereum (ETH), Dogecoin (DOGE), Litecoin (LTC), Solana (SOL), Tezos (XTZ), Tron (TRX), and Polygon (POL)."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What if I forget my password?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "If you forget your password, you can restore your wallet using your 12-word seed phrase. This is why it's crucial to keep your seed phrase safe and secure. Without your seed phrase, your funds cannot be recovered."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Are there any fees?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "DogeGage Wallet is free to use. You only pay network transaction fees (gas fees) when sending cryptocurrency and exchange fees when using the built-in swap feature."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Do I need to create an account?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "No! DogeGage Wallet requires no registration or KYC. Simply create or import a wallet and start using it immediately."
+                }
+            }
+        ]
+    };
+    
+    // Inject schema into page
+    if (!document.getElementById('faq-schema')) {
+        const script = document.createElement('script');
+        script.id = 'faq-schema';
+        script.type = 'application/ld+json';
+        script.text = JSON.stringify(faqSchema);
+        document.head.appendChild(script);
+    }
+    
     return `
         <div class="support-page">
             <nav class="landing-nav">

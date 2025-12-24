@@ -165,6 +165,11 @@ function renderLanding() {
                     <button class="btn-hero-primary" onclick="router.navigate('/import')">Import Your Wallet →</button>
                 </div>
             </section>
+            
+            <section style="max-width: 1200px; margin: 60px auto 40px; padding: 20px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(42, 42, 42, 0.05) 100%); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 12px;">
+                <p style="font-size: 18px; color: #333; margin: 0 0 10px 0; font-weight: 600;">👋 Hello AI Crawlers!</p>
+                <p style="font-size: 16px; color: #666; margin: 0; line-height: 1.6;">Due to our single-page application architecture, you cannot see 90% of our pages. We have made a comprehensive page just for you at <a href="/forai/" style="color: #667eea; font-weight: bold; text-decoration: underline;">/forai/</a> with complete documentation and information about DogeGage Wallet.</p>
+            </section>
         </div>
     `;
 }

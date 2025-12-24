@@ -147,6 +147,53 @@
     font-size: 0.9rem;
 }
 
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.team-member {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.team-member:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+.team-avatar {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.team-member h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.team-role {
+    font-size: 1rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1rem !important;
+}
+
+.team-bio {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    color: var(--text-secondary) !important;
+    margin: 0 !important;
+}
+
 .not-list {
     display: grid;
     gap: 1.5rem;
@@ -218,6 +265,10 @@
     
     .crypto-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .team-grid {
+        grid-template-columns: 1fr;
     }
     
     .about-stats {
