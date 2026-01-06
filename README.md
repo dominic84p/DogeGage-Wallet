@@ -4,6 +4,8 @@ A non-custodial, multi-chain cryptocurrency wallet. Your keys, your crypto.
 
 🌐 **Live:** [wallet.dogegage.xyz](https://wallet.dogegage.xyz)
 
+> ⚠️ **License:** This is **Source Available**, not Open Source. You can view, fork, and modify for personal use. You **cannot** host as a public service or redistribute commercially. See [LICENSE](LICENSE).
+
 ## Supported Cryptocurrencies
 
 - Bitcoin (BTC)
@@ -54,15 +56,24 @@ Then open `http://localhost:8080`
 │   │   └── pages/      # Page components
 │   ├── services/       # Blockchain services
 │   └── css/            # Styles
-├── functions/          # Cloudflare Pages Functions (SSR)
-└── worker.js           # API proxy (not included - contains keys)
+└── functions/          # Cloudflare Pages Functions (SSR)
 ```
+
+> **Note:** The API worker (`worker.js`) is not included in this repo as it contains API keys. The frontend connects to our hosted worker at `wallet-api.therealdominic84plays.workers.dev`.
 
 ## License
 
 **Source Available** - See [LICENSE](LICENSE)
 
 You can view, fork, and modify for personal use. You cannot host as a public service or redistribute commercially.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to help.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## Links
 
