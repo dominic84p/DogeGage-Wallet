@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 class PolygonService {
     constructor() {
         this.rpcUrl = 'https://polygon-rpc.com';

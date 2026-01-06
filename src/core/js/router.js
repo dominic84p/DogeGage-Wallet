@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Simple SPA Router with Hash-based routing
 class Router {
     constructor() {

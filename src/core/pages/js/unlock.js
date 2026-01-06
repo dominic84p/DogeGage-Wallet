@@ -65,12 +65,6 @@ async function handleUnlock(event) {
         const seedPhrase = await encryptionService.loadWallet(password);
         await walletService.importFromSeed(seedPhrase);
         
-        // Fetch exchange rates and balances
-        await Promise.all([
-            fetchExchangeRates(),
-            walletService.fetchBalances()
-        ]);
-        
         // Check if there's a redirect target
         const redirectTo = sessionStorage.getItem('redirectAfterUnlock');
         if (redirectTo) {
@@ -79,6 +73,11 @@ async function handleUnlock(event) {
         } else {
             router.navigate('/wallet');
         }
+        
+        // Fetch exchange rates and balances in background (progressive updates)
+        fetchExchangeRates();
+        walletService.fetchBalances();
+        
     } catch (error) {
         errorEl.textContent = error.message === 'Invalid password or corrupted data' 
             ? 'Incorrect password' 

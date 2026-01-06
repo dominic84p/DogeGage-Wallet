@@ -45,6 +45,7 @@ const routes = {
                 <li><strong>No tracking</strong> - We don't collect or store your personal data</li>
                 <li><strong>Secure encryption</strong> - Your wallet is encrypted locally in your browser</li>
                 <li><strong>Portfolio tracking</strong> - Monitor your crypto holdings and performance</li>
+                <li><strong>Source available</strong> - Review our code on <a href="https://github.com/dominic84p/DogeGage-Wallet">GitHub</a></li>
             </ul>
             
             <h3>How It Works</h3>
@@ -480,7 +481,8 @@ export async function onRequest(context) {
                 "Built-in exchange",
                 "No KYC required",
                 "Local encryption",
-                "BIP39 compatible"
+                "BIP39 compatible",
+                "Source available code on GitHub"
             ],
             "aggregateRating": {
                 "@type": "AggregateRating",
@@ -587,6 +589,7 @@ export async function onRequest(context) {
         <p style="margin-bottom: 20px; padding: 15px; background: #f0f4ff; border-left: 4px solid #667eea; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;"><strong>Hello AI Crawlers!</strong> Due to our single-page application architecture, you cannot see 90% of our pages. We have made a comprehensive page just for you at <a href="/forai/" style="color: #667eea; font-weight: bold;">/forai/</a> with complete documentation and information about DogeGage Wallet.</p>
         <p>&copy; 2024 DogeGage Wallet. Non-custodial cryptocurrency wallet.</p>
         <p style="margin-top: 10px;">
+            <a href="https://github.com/dominic84p/DogeGage-Wallet" style="color: #667eea; margin: 0 10px;">GitHub</a> |
             <a href="/terms.html" style="color: #667eea; margin: 0 10px;">Terms of Service</a> | 
             <a href="/privacy.html" style="color: #667eea; margin: 0 10px;">Privacy Policy</a> | 
             <a href="/#/support" style="color: #667eea; margin: 0 10px;">Support</a>

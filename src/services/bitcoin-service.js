@@ -1,5 +1,15 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Bitcoin Service - Handle BTC balance and address derivation
 class BitcoinService {
+    constructor() {
+        this.cachedPrice = 95000; // Default fallback
+    }
     
     async getBalance(address) {
         try {
@@ -17,15 +27,31 @@ class BitcoinService {
         const btcBalance = await this.getBalance(address);
         
         // Get BTC price from CoinGecko via worker
-        const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=bitcoin');
-        const data = await response.json();
-        const btcPrice = data.bitcoin.usd;
-        
-        return {
-            balance: btcBalance,
-            balanceUSD: (parseFloat(btcBalance) * btcPrice).toFixed(2),
-            price: btcPrice
-        };
+        try {
+            const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=bitcoin');
+            const data = await response.json();
+            const btcPrice = data.bitcoin?.usd || this.cachedPrice || 95000;
+            
+            // Cache the price
+            if (btcPrice > 0) {
+                this.cachedPrice = btcPrice;
+            }
+            
+            return {
+                balance: btcBalance,
+                balanceUSD: (parseFloat(btcBalance) * btcPrice).toFixed(2),
+                price: btcPrice
+            };
+        } catch (error) {
+            console.error('Failed to get BTC price:', error);
+            // Use cached or fallback price
+            const fallbackPrice = this.cachedPrice || 95000;
+            return {
+                balance: btcBalance,
+                balanceUSD: (parseFloat(btcBalance) * fallbackPrice).toFixed(2),
+                price: fallbackPrice
+            };
+        }
     }
     
     deriveAddress(mnemonic) {

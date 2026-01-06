@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Tron Service - Handle TRX balance and address derivation
 class TronService {
     constructor() {
@@ -8,17 +15,26 @@ class TronService {
         try {
             // Use TronGrid API
             const response = await fetch(`https://api.trongrid.io/v1/accounts/${address}`);
+            
+            // Handle rate limiting
+            if (response.status === 429) {
+                console.warn('TronGrid rate limited, using cached balance');
+                return this.cachedBalance || '0.000000';
+            }
+            
             const data = await response.json();
             
             if (data && data.data && data.data[0]) {
                 const balance = data.data[0].balance || 0;
                 // Convert from sun to TRX (1 TRX = 1,000,000 sun)
-                return (balance / 1000000).toFixed(6);
+                const trxBalance = (balance / 1000000).toFixed(6);
+                this.cachedBalance = trxBalance;
+                return trxBalance;
             }
             return '0.000000';
         } catch (error) {
             console.error('Failed to fetch Tron balance:', error);
-            return '0.000000';
+            return this.cachedBalance || '0.000000';
         }
     }
     

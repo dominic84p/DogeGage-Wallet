@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Ethereum Service - Handle ETH balance and transactions
 class EthereumService {
     constructor(infuraApiKey) {

@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Exchange Page
 
 // Minimum exchange amounts (hardcoded to avoid API calls)
@@ -241,6 +248,8 @@ function renderExchange() {
     `;
 }
 
+let estimateTimeout = null;
+
 async function updateFromAmount(amount) {
     // Allow decimals
     if (amount && !/^\d*\.?\d*$/.test(amount)) {
@@ -250,6 +259,11 @@ async function updateFromAmount(amount) {
     exchangeState.fromAmount = amount;
     exchangeState.error = '';
     
+    // Clear previous timeout
+    if (estimateTimeout) {
+        clearTimeout(estimateTimeout);
+    }
+    
     // Check minimum amount
     if (amount && parseFloat(amount) > 0) {
         const minAmount = getMinAmount(exchangeState.fromCurrency, exchangeState.toCurrency);
@@ -257,31 +271,126 @@ async function updateFromAmount(amount) {
         if (parseFloat(amount) < minAmount) {
             exchangeState.error = `Minimum amount is ${minAmount} ${exchangeState.fromCurrency}`;
             exchangeState.toAmount = '';
-            document.getElementById('app').innerHTML = renderExchange();
+            updateExchangeUI();
             return;
         }
         
-        exchangeState.estimating = true;
-        document.getElementById('app').innerHTML = renderExchange();
-        
-        // Get estimate from ChangeNow
-        const fromCode = changeNowService.getCurrencyCode(exchangeState.fromCurrency);
-        const toCode = changeNowService.getCurrencyCode(exchangeState.toCurrency);
-        
-        const estimate = await changeNowService.getEstimate(fromCode, toCode, amount);
-        
-        if (estimate && estimate.toAmount) {
-            exchangeState.toAmount = estimate.toAmount;
+        // Debounce the API call - wait 500ms after user stops typing
+        estimateTimeout = setTimeout(async () => {
+            exchangeState.estimating = true;
+            updateExchangeUI();
+            
+            // Get estimate from ChangeNow
+            const fromCode = changeNowService.getCurrencyCode(exchangeState.fromCurrency);
+            const toCode = changeNowService.getCurrencyCode(exchangeState.toCurrency);
+            
+            const estimate = await changeNowService.getEstimate(fromCode, toCode, amount);
+            
+            if (estimate && estimate.toAmount) {
+                exchangeState.toAmount = estimate.toAmount;
+            } else {
+                exchangeState.toAmount = '';
+            }
             exchangeState.estimating = false;
-        } else {
-            exchangeState.toAmount = '';
-            exchangeState.estimating = false;
-        }
-        
-        document.getElementById('app').innerHTML = renderExchange();
+            updateExchangeUI();
+        }, 500);
     } else {
         exchangeState.toAmount = '';
-        document.getElementById('app').innerHTML = renderExchange();
+        updateExchangeUI();
+    }
+}
+
+// Update only the dynamic parts without re-rendering the whole page
+function updateExchangeUI() {
+    // Update error message
+    const errorEl = document.querySelector('.exchange-error');
+    const hintEl = document.querySelector('.exchange-hint');
+    const inputEl = document.querySelector('.exchange-input');
+    
+    if (exchangeState.error) {
+        if (inputEl) inputEl.classList.add('error');
+        if (!errorEl) {
+            const inputBox = document.querySelector('.exchange-input-box');
+            if (inputBox) {
+                const errDiv = document.createElement('div');
+                errDiv.className = 'exchange-error';
+                errDiv.textContent = exchangeState.error;
+                inputBox.parentElement.insertBefore(errDiv, inputBox.nextSibling);
+            }
+        } else {
+            errorEl.textContent = exchangeState.error;
+        }
+        if (hintEl) hintEl.style.display = 'none';
+    } else {
+        if (inputEl) inputEl.classList.remove('error');
+        if (errorEl) errorEl.remove();
+    }
+    
+    // Update "to" amount
+    const toInput = document.querySelectorAll('.exchange-input')[1];
+    if (toInput) {
+        toInput.value = exchangeState.toAmount;
+    }
+    
+    // Update exchange details sidebar
+    const infoCard = document.querySelector('.exchange-info-card');
+    if (infoCard && exchangeState.toAmount && exchangeState.fromAmount) {
+        const rate = (parseFloat(exchangeState.toAmount) / parseFloat(exchangeState.fromAmount)).toFixed(6);
+        infoCard.innerHTML = `
+            <h4>Exchange Details</h4>
+            <div class="exchange-info-grid">
+                <div class="exchange-info-item">
+                    <span class="label">Rate</span>
+                    <span class="value">1 ${exchangeState.fromCurrency} ≈ ${rate} ${exchangeState.toCurrency}</span>
+                </div>
+                <div class="exchange-info-item">
+                    <span class="label">You Send</span>
+                    <span class="value">${exchangeState.fromAmount} ${exchangeState.fromCurrency}</span>
+                </div>
+                <div class="exchange-info-item">
+                    <span class="label">You Receive</span>
+                    <span class="value">${exchangeState.toAmount} ${exchangeState.toCurrency}</span>
+                </div>
+                <div class="exchange-info-item">
+                    <span class="label">Network Fee</span>
+                    <span class="value">Included</span>
+                </div>
+                <div class="exchange-info-item">
+                    <span class="label">Est. Time</span>
+                    <span class="value">5-30 min</span>
+                </div>
+            </div>
+            <button 
+                class="exchange-btn" 
+                onclick="initiateExchange()" 
+                ${!canExchange() ? 'disabled' : ''}
+            >
+                ${exchangeState.countdown > 0 ? 
+                    `Cancel (${exchangeState.countdown}s)` : 
+                    (exchangeState.fromAmount ? 'Exchange Now' : 'Enter Amount')
+                }
+            </button>
+            <div class="exchange-powered-by">
+                Powered by ChangeNow
+            </div>
+        `;
+    } else if (infoCard && !exchangeState.toAmount) {
+        infoCard.innerHTML = `
+            <h4>Exchange Details</h4>
+            <div class="exchange-info-empty">
+                Enter an amount to see exchange details
+            </div>
+            <button 
+                class="exchange-btn" 
+                onclick="initiateExchange()" 
+                disabled
+            >
+                Enter Amount
+            </button>
+            <div class="exchange-powered-by">
+                Powered by ChangeNow
+            </div>
+        `;
     }
 }
 

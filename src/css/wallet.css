@@ -1031,3 +1031,82 @@
     align-items: center;
     gap: 0.75rem;
 }
+
+
+/* Price Chart Section */
+.price-chart-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.chart-timeframes {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.timeframe-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.timeframe-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.timeframe-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.chart-container {
+    height: 200px;
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 150px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+}
+
+
+/* Balance Loading State */
+.balance-loading {
+    color: #888;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}

@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // DogeGage Wallet - Main Application
 console.log('%c⚠️ STOP! ⚠️', 'color: red; font-size: 50px; font-weight: bold;');
 console.log('%c🛑 WARNING - SCAM ALERT 🛑', 'color: red; font-size: 30px; font-weight: bold; background: yellow; padding: 10px;');

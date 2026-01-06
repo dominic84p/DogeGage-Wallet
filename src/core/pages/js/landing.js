@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Landing Page
 function renderLanding() {
     // Load tawk.to chat widget
@@ -123,6 +130,11 @@ function renderLanding() {
                         <h3>No Telemetry</h3>
                         <p>Zero tracking. Zero analytics. Zero data collection. Period.</p>
                     </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📖</div>
+                        <h3>Source Available</h3>
+                        <p>Review our code on <a href="https://github.com/dominic84p/DogeGage-Wallet" target="_blank" style="color: #667eea;">GitHub</a>. Verify we're not stealing your crypto.</p>
+                    </div>
                 </div>
             </section>
             
@@ -170,6 +182,15 @@ function renderLanding() {
                 <p style="font-size: 18px; color: #333; margin: 0 0 10px 0; font-weight: 600;">👋 Hello AI Crawlers!</p>
                 <p style="font-size: 16px; color: #666; margin: 0; line-height: 1.6;">Due to our single-page application architecture, you cannot see 90% of our pages. We have made a comprehensive page just for you at <a href="/forai/" style="color: #667eea; font-weight: bold; text-decoration: underline;">/forai/</a> with complete documentation and information about DogeGage Wallet.</p>
             </section>
+            
+            <footer class="landing-footer">
+                <div class="footer-links">
+                    <a href="https://github.com/dominic84p/DogeGage-Wallet" target="_blank">GitHub</a>
+                    <a href="/terms.html">Terms</a>
+                    <a href="/privacy.html">Privacy</a>
+                </div>
+                <p>© 2024-2026 DogeGage Wallet. Source available on <a href="https://github.com/dominic84p/DogeGage-Wallet" target="_blank" style="color: #667eea;">GitHub</a>.</p>
+            </footer>
         </div>
     `;
 }

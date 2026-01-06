@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Tezos Service - Handle XTZ balance and address derivation
 class TezosService {
     
@@ -5,16 +12,25 @@ class TezosService {
         try {
             // Use TzKT API (Tezos blockchain explorer)
             const response = await fetch(`https://api.tzkt.io/v1/accounts/${address}`);
+            
+            // Handle rate limiting
+            if (response.status === 429) {
+                console.warn('TzKT rate limited, using cached balance');
+                return this.cachedBalance || '0.000000';
+            }
+            
             const data = await response.json();
             
             if (data && data.balance !== undefined) {
                 // Convert from mutez to XTZ (1 XTZ = 1,000,000 mutez)
-                return (data.balance / 1000000).toFixed(6);
+                const xtzBalance = (data.balance / 1000000).toFixed(6);
+                this.cachedBalance = xtzBalance;
+                return xtzBalance;
             }
             return '0.000000';
         } catch (error) {
             console.error('Failed to fetch Tezos balance:', error);
-            return '0.000000';
+            return this.cachedBalance || '0.000000';
         }
     }
     

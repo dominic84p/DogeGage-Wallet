@@ -1,3 +1,10 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Wallet Page
 let selectedAsset = 'bitcoin';
 let expandedChains = { bitcoin: true, ethereum: true, tezos: true, tron: true, solana: true };
@@ -85,6 +92,7 @@ function renderWallet() {
     
     const totalBalance = walletService.getTotalBalance();
     const totalBalanceConverted = convertCurrency(totalBalance);
+    const isLoading = walletService.isBalancesLoading();
     
     // Get selected asset data
     let asset, assetName, assetSymbol, chainName;
@@ -169,8 +177,8 @@ function renderWallet() {
             <div class="wallet-layout ${selectedAsset ? 'crypto-selected' : ''}">
                 <aside class="wallet-sidebar">
                     <div class="sidebar-header">
-                        <div class="total-balance">${currencySymbols[selectedCurrency]}${totalBalanceConverted} <span>${selectedCurrency.toUpperCase()}</span></div>
-                        <div class="wallet-stats">5 chains</div>
+                        <div class="total-balance">${isLoading ? '...' : `${currencySymbols[selectedCurrency]}${totalBalanceConverted}`} <span>${selectedCurrency.toUpperCase()}</span></div>
+                        <div class="wallet-stats">5 chains${isLoading ? ' • Loading...' : ''}</div>
                     </div>
                     <div class="wallet-list">
                         ${renderChainGroup('Bitcoin', 'bitcoin', '#f7931a', [
@@ -243,6 +251,20 @@ function renderWallet() {
                                 </div>
                             </div>
                             
+                            <div class="price-chart-section">
+                                <div class="chart-header">
+                                    <h3>Price Chart</h3>
+                                    <div class="chart-timeframes">
+                                        <button class="timeframe-btn active" onclick="loadPriceChart('${assetSymbol}', 1, this)">24H</button>
+                                        <button class="timeframe-btn" onclick="loadPriceChart('${assetSymbol}', 7, this)">7D</button>
+                                        <button class="timeframe-btn" onclick="loadPriceChart('${assetSymbol}', 30, this)">30D</button>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="priceChart"></canvas>
+                                </div>
+                            </div>
+                            
                             <div class="transactions-section">
                                 <h3>Transactions</h3>
                                 ${asset.transactions && asset.transactions.length > 0 ? `
@@ -281,6 +303,7 @@ function renderWallet() {
 
 function renderChainGroup(chainName, chainKey, color, assets) {
     const isExpanded = expandedChains[chainKey];
+    const isLoading = walletService.isBalancesLoading();
     const totalUSD = assets.reduce((sum, a) => sum + parseFloat(a.asset.balanceUSD || 0), 0).toFixed(2);
     const totalConverted = convertCurrency(totalUSD);
     
@@ -310,7 +333,7 @@ function renderChainGroup(chainName, chainKey, color, assets) {
                     </div>
                 </div>
                 <div class="chain-balance">
-                    <div>${currencySymbols[selectedCurrency]}${totalConverted}</div>
+                    <div>${isLoading ? '...' : `${currencySymbols[selectedCurrency]}${totalConverted}`}</div>
                     <div class="expand-icon">${isExpanded ? '▼' : '▶'}</div>
                 </div>
             </div>
@@ -337,6 +360,8 @@ function renderWalletItem(name, symbol, color, asset, active) {
         'SOL': 'src/assets/crypto/SVG/sol.svg'
     };
     
+    const isLoading = walletService.isBalancesLoading();
+    
     return `
         <div class="wallet-item ${active ? 'active' : ''}" onclick="selectAsset('${symbol.toLowerCase()}')">
             <div class="wallet-icon-small" style="background: transparent;">
@@ -346,8 +371,13 @@ function renderWalletItem(name, symbol, color, asset, active) {
                 <div class="wallet-name">${symbol}</div>
             </div>
             <div class="wallet-balance">
-                <div>${asset.balance}</div>
-                <div class="balance-usd">${currencySymbols[selectedCurrency]}${convertCurrency(asset.balanceUSD)}</div>
+                ${isLoading ? `
+                    <div class="balance-loading">...</div>
+                    <div class="balance-usd balance-loading">...</div>
+                ` : `
+                    <div>${asset.balance}</div>
+                    <div class="balance-usd">${currencySymbols[selectedCurrency]}${convertCurrency(asset.balanceUSD)}</div>
+                `}
             </div>
         </div>
     `;
@@ -774,3 +804,192 @@ async function sendDGAGE(toAddress, amount) {
         throw new Error('Transaction failed - no transaction hash returned');
     }
 }
+
+// Price chart instance
+let priceChartInstance = null;
+
+// CoinGecko ID mapping
+const coinGeckoIds = {
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'DOGE': 'dogecoin',
+    'LTC': 'litecoin',
+    'SOL': 'solana',
+    'XTZ': 'tezos',
+    'TRX': 'tron',
+    'POL': 'matic-network'
+};
+
+// Chart cache to avoid rate limiting
+let chartCache = {};
+const CHART_CACHE_TTL = 60000; // 1 minute
+
+async function loadPriceChart(symbol, days = 1, buttonEl = null) {
+    const coinId = coinGeckoIds[symbol];
+    if (!coinId) {
+        console.log('No chart data for', symbol);
+        return;
+    }
+    
+    // Update active button
+    document.querySelectorAll('.timeframe-btn').forEach(btn => btn.classList.remove('active'));
+    if (buttonEl) {
+        buttonEl.classList.add('active');
+    } else {
+        const firstBtn = document.querySelector('.timeframe-btn');
+        if (firstBtn) firstBtn.classList.add('active');
+    }
+    
+    try {
+        const cacheKey = `${coinId}-${days}`;
+        let data = null;
+        
+        // Check cache - must have valid prices array
+        const cached = chartCache[cacheKey];
+        if (cached && Array.isArray(cached.data?.prices) && cached.data.prices.length > 0 && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
+            console.log('Using cached chart data for', symbol, '- points:', cached.data.prices.length);
+            data = cached.data;
+        } else {
+            // Always fetch fresh if cache invalid
+            console.log('Fetching fresh chart data for', symbol);
+            const response = await fetch(`https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/chart?id=${coinId}&days=${days}`);
+            
+            if (!response.ok) {
+                console.error('Chart API error:', response.status);
+                return;
+            }
+            
+            data = await response.json();
+            console.log('Chart response for', symbol, '- prices:', data.prices?.length || 0);
+            
+            // Only cache valid data
+            if (Array.isArray(data.prices) && data.prices.length > 0) {
+                chartCache[cacheKey] = { data, timestamp: Date.now() };
+            }
+        }
+        
+        if (!Array.isArray(data?.prices) || data.prices.length === 0) {
+            console.error('No valid price data for', symbol);
+            delete chartCache[cacheKey];
+            // Show unavailable message
+            const ctx = document.getElementById('priceChart');
+            if (ctx) {
+                const container = ctx.parentElement;
+                container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#888;">Chart temporarily unavailable (rate limited)</div>';
+            }
+            return;
+        }
+        
+        const prices = data.prices;
+        const labels = prices.map(p => {
+            const date = new Date(p[0]);
+            if (days === 1) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+        });
+        const values = prices.map(p => p[1]);
+        
+        // Determine if price went up or down
+        const priceChange = values[values.length - 1] - values[0];
+        const chartColor = priceChange >= 0 ? '#4ade80' : '#ef4444';
+        
+        const ctx = document.getElementById('priceChart');
+        if (!ctx) return;
+        
+        // Destroy existing chart
+        if (priceChartInstance) {
+            priceChartInstance.destroy();
+        }
+        
+        priceChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `${symbol} Price`,
+                    data: values,
+                    borderColor: chartColor,
+                    backgroundColor: chartColor + '20',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#888',
+                            maxTicksLimit: 6
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255,255,255,0.1)'
+                        },
+                        ticks: {
+                            color: '#888',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Failed to load price chart:', error);
+    }
+}
+
+// Auto-load chart when asset is selected
+function initPriceChart() {
+    const symbol = selectedAsset === 'bitcoin' ? 'BTC' : 
+                   selectedAsset === 'ethereum' ? 'ETH' :
+                   selectedAsset === 'dogecoin' ? 'DOGE' :
+                   selectedAsset === 'litecoin' ? 'LTC' :
+                   selectedAsset === 'solana' ? 'SOL' :
+                   selectedAsset === 'tezos' ? 'XTZ' :
+                   selectedAsset === 'tron' ? 'TRX' :
+                   selectedAsset === 'polygon' ? 'POL' : null;
+    
+    if (symbol && document.getElementById('priceChart')) {
+        loadPriceChart(symbol, 1);
+    }
+}
+
+// Call initPriceChart after render
+const originalSelectAsset = selectAsset;
+selectAsset = function(asset) {
+    originalSelectAsset(asset);
+    setTimeout(initPriceChart, 100);
+};

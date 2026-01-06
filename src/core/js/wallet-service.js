@@ -1,8 +1,16 @@
+/**
+ * DogeGage Wallet
+ * Copyright (c) 2024-2026 DogeGage
+ * Source Available License - See LICENSE file
+ * https://github.com/dominic84p/DogeGage-Wallet
+ */
+
 // Wallet Service - Manages wallet state and crypto operations
 class WalletService {
     constructor() {
         this.wallet = null;
         this.isUnlocked = false;
+        this.balancesLoading = false;
         this.infuraApiKey = null;
         this.ethereumService = null;
         this.bitcoinService = new BitcoinService();
@@ -14,6 +22,14 @@ class WalletService {
         this.dgageService = new DGAGEService();
         this.polygonService = new PolygonService();
         this.tokenScanner = new TokenScanner();
+    }
+    
+    setBalancesLoading(loading) {
+        this.balancesLoading = loading;
+    }
+    
+    isBalancesLoading() {
+        return this.balancesLoading;
     }
     
     setInfuraKey(apiKey) {
@@ -121,12 +137,49 @@ class WalletService {
     async fetchBalances() {
         if (!this.wallet) return;
         
+        // Debounce - don't fetch if already fetching
+        if (this.isFetching) {
+            console.log('Already fetching balances, skipping...');
+            return;
+        }
+        this.isFetching = true;
+        
         if (!this.infuraApiKey) {
             console.error('Infura API key not set');
+            this.isFetching = false;
             return;
         }
         
         console.log('Fetching balances...');
+        
+        // Fetch all prices upfront in one call
+        let prices = {};
+        try {
+            const priceRes = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=bitcoin,ethereum,dogecoin,litecoin,solana,tezos,tron,matic-network');
+            prices = await priceRes.json();
+            console.log('Prices fetched:', prices);
+        } catch (e) {
+            console.warn('Price fetch failed, using fallbacks');
+        }
+        
+        // Price helpers using cached prices
+        const getPrice = (id, fallback) => prices[id]?.usd || fallback;
+        
+        // Retry helper - tries up to 3 times with delay
+        const withRetry = async (fn, name, retries = 3) => {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    console.warn(`${name} attempt ${i + 1}/${retries} failed:`, error.message);
+                    if (i < retries - 1) {
+                        await new Promise(r => setTimeout(r, 1000 * (i + 1))); // 1s, 2s, 3s delays
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        };
         
         // Try to load cached balances first
         const cached = this.loadCachedBalances();
@@ -146,155 +199,223 @@ class WalletService {
             this.wallet.solana.balanceUSD = cached.solana?.balanceUSD || '0.00';
         }
         
+        // Helper to update UI after each chain loads
+        const updateUI = () => {
+            const hash = window.location.hash;
+            // Only update if on wallet page and NOT viewing asset details (to avoid breaking chart)
+            if ((hash === '#/wallet' || hash === '' || hash === '#/' || hash === '#' || !hash)) {
+                try {
+                    // Check if user is in send form - don't interrupt
+                    if (typeof showingSend !== 'undefined' && showingSend) {
+                        return;
+                    }
+                    document.getElementById('app').innerHTML = renderWallet();
+                    // Re-init price chart if viewing an asset
+                    if (typeof selectedAsset !== 'undefined' && selectedAsset && typeof initPriceChart === 'function') {
+                        setTimeout(initPriceChart, 100);
+                    }
+                } catch (e) {
+                    console.warn('UI update skipped:', e.message);
+                }
+            }
+        };
+        
+        // Fetch all chains in parallel, update UI as each completes
+        const fetchPromises = [];
+        
+        // Ethereum
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const ethBalance = await this.ethereumService.getBalance(this.wallet.ethereum.address);
+                    const ethPrice = getPrice('ethereum', 3000);
+                    this.wallet.ethereum.balance = ethBalance;
+                    this.wallet.ethereum.balanceUSD = (parseFloat(ethBalance) * ethPrice).toFixed(2);
+                    this.wallet.ethereum.transactions = await this.ethereumService.getTransactions(this.wallet.ethereum.address);
+                    console.log('ETH Balance:', ethBalance, 'USD:', this.wallet.ethereum.balanceUSD);
+                    updateUI();
+                }, 'ETH');
+            } catch (error) {
+                console.error('ETH balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Bitcoin
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const btcBalance = await this.bitcoinService.getBalance(this.wallet.bitcoin.address);
+                    const btcPrice = getPrice('bitcoin', 90000);
+                    this.wallet.bitcoin.balance = btcBalance;
+                    this.wallet.bitcoin.balanceUSD = (parseFloat(btcBalance) * btcPrice).toFixed(2);
+                    this.wallet.bitcoin.transactions = await this.bitcoinService.getTransactions(this.wallet.bitcoin.address);
+                    console.log('BTC Balance:', btcBalance, 'USD:', this.wallet.bitcoin.balanceUSD);
+                    updateUI();
+                }, 'BTC');
+            } catch (error) {
+                console.error('BTC balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Dogecoin
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const dogeBalance = await this.dogecoinService.getBalance(this.wallet.dogecoin.address);
+                    const dogePrice = getPrice('dogecoin', 0.35);
+                    this.wallet.dogecoin.balance = dogeBalance;
+                    this.wallet.dogecoin.balanceUSD = (parseFloat(dogeBalance) * dogePrice).toFixed(2);
+                    console.log('DOGE Balance:', dogeBalance, 'USD:', this.wallet.dogecoin.balanceUSD);
+                    updateUI();
+                }, 'DOGE');
+            } catch (error) {
+                console.error('DOGE balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Litecoin
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const ltcBalance = await this.litecoinService.getBalance(this.wallet.litecoin.address);
+                    const ltcPrice = getPrice('litecoin', 100);
+                    this.wallet.litecoin.balance = ltcBalance;
+                    this.wallet.litecoin.balanceUSD = (parseFloat(ltcBalance) * ltcPrice).toFixed(2);
+                    console.log('LTC Balance:', ltcBalance, 'USD:', this.wallet.litecoin.balanceUSD);
+                    updateUI();
+                }, 'LTC');
+            } catch (error) {
+                console.error('LTC balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Tezos
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const xtzBalance = await this.tezosService.getBalance(this.wallet.tezos.address);
+                    const xtzPrice = getPrice('tezos', 1);
+                    this.wallet.tezos.balance = xtzBalance;
+                    this.wallet.tezos.balanceUSD = (parseFloat(xtzBalance) * xtzPrice).toFixed(2);
+                    console.log('XTZ Balance:', xtzBalance, 'USD:', this.wallet.tezos.balanceUSD);
+                    updateUI();
+                }, 'XTZ');
+            } catch (error) {
+                console.error('XTZ balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Tron
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const trxBalance = await this.tronService.getBalance(this.wallet.tron.address);
+                    const trxPrice = getPrice('tron', 0.25);
+                    this.wallet.tron.balance = trxBalance;
+                    this.wallet.tron.balanceUSD = (parseFloat(trxBalance) * trxPrice).toFixed(2);
+                    console.log('TRX Balance:', trxBalance, 'USD:', this.wallet.tron.balanceUSD);
+                    updateUI();
+                }, 'TRX');
+            } catch (error) {
+                console.error('TRX balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Solana
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const solBalance = await this.solanaService.getBalance(this.wallet.solana.address);
+                    const solPrice = getPrice('solana', 140);
+                    this.wallet.solana.balance = solBalance;
+                    this.wallet.solana.balanceUSD = (parseFloat(solBalance) * solPrice).toFixed(2);
+                    this.wallet.solana.transactions = await this.solanaService.getTransactions(this.wallet.solana.address);
+                    console.log('SOL Balance:', solBalance, 'USD:', this.wallet.solana.balanceUSD);
+                    updateUI();
+                }, 'SOL');
+            } catch (error) {
+                console.error('SOL balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // DGAGE
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const dgageBalance = await this.dgageService.getBalance(this.wallet.ethereum.address);
+                    const dgageTransactions = await this.dgageService.getTransactions(this.wallet.ethereum.address);
+                    this.wallet.dgage = {
+                        address: this.wallet.ethereum.address,
+                        balance: dgageBalance,
+                        balanceUSD: '0.00',
+                        transactions: dgageTransactions
+                    };
+                    console.log('DGAGE Balance:', dgageBalance);
+                    updateUI();
+                }, 'DGAGE');
+            } catch (error) {
+                console.error('DGAGE balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Polygon
+        fetchPromises.push((async () => {
+            try {
+                await withRetry(async () => {
+                    const polBalanceRaw = await this.polygonService.getBalance(this.wallet.ethereum.address);
+                    const polBalance = parseFloat(polBalanceRaw).toFixed(8);
+                    const polPrice = getPrice('matic-network', 0.5);
+                    const polBalanceUSD = (parseFloat(polBalance) * polPrice).toFixed(2);
+                    this.wallet.polygon = {
+                        address: this.wallet.ethereum.address,
+                        balance: polBalance,
+                        balanceUSD: polBalanceUSD,
+                        transactions: []
+                    };
+                    console.log('POL Balance:', polBalance, 'USD:', polBalanceUSD);
+                    updateUI();
+                }, 'POL');
+            } catch (error) {
+                console.error('POL balance fetch failed after retries:', error);
+            }
+        })());
+        
+        // Wait for all to complete
+        await Promise.all(fetchPromises);
+        
+        // Token scanning (do this after main balances)
         try {
-            // Fetch Ethereum balance
-            try {
-                const ethData = await this.ethereumService.getBalanceUSD(this.wallet.ethereum.address);
-                this.wallet.ethereum.balance = ethData.balance;
-                this.wallet.ethereum.balanceUSD = ethData.balanceUSD;
-                this.wallet.ethereum.transactions = await this.ethereumService.getTransactions(this.wallet.ethereum.address);
-                console.log('ETH Balance:', ethData.balance, 'USD:', ethData.balanceUSD);
-            } catch (error) {
-                console.error('ETH balance fetch failed:', error);
-            }
+            console.log('Scanning for additional tokens...');
+            const [ethTokens, polyTokens] = await Promise.all([
+                this.tokenScanner.scanEthereumTokens(this.wallet.ethereum.address),
+                this.tokenScanner.scanPolygonTokens(this.wallet.ethereum.address)
+            ]);
             
-            // Fetch Bitcoin balance
-            try {
-                const btcData = await this.bitcoinService.getBalanceUSD(this.wallet.bitcoin.address);
-                this.wallet.bitcoin.balance = btcData.balance;
-                this.wallet.bitcoin.balanceUSD = btcData.balanceUSD;
-                this.wallet.bitcoin.transactions = await this.bitcoinService.getTransactions(this.wallet.bitcoin.address);
-                console.log('BTC Balance:', btcData.balance, 'USD:', btcData.balanceUSD);
-            } catch (error) {
-                console.error('BTC balance fetch failed:', error);
-            }
+            this.wallet.detectedTokens = {
+                ethereum: ethTokens,
+                polygon: polyTokens
+            };
             
-            // Fetch Dogecoin balance
-            try {
-                const dogeBalance = await this.dogecoinService.getBalance(this.wallet.dogecoin.address);
-                const dogePrice = await this.getDogePrice();
-                this.wallet.dogecoin.balance = dogeBalance;
-                this.wallet.dogecoin.balanceUSD = (parseFloat(dogeBalance) * dogePrice).toFixed(2);
-                console.log('DOGE Balance:', dogeBalance, 'USD:', this.wallet.dogecoin.balanceUSD);
-            } catch (error) {
-                console.error('DOGE balance fetch failed:', error);
-            }
-            
-            // Fetch Litecoin balance
-            try {
-                const ltcBalance = await this.litecoinService.getBalance(this.wallet.litecoin.address);
-                const ltcPrice = await this.getLtcPrice();
-                this.wallet.litecoin.balance = ltcBalance;
-                this.wallet.litecoin.balanceUSD = (parseFloat(ltcBalance) * ltcPrice).toFixed(2);
-                console.log('LTC Balance:', ltcBalance, 'USD:', this.wallet.litecoin.balanceUSD);
-            } catch (error) {
-                console.error('LTC balance fetch failed:', error);
-            }
-            
-            // Fetch Tezos balance
-            try {
-                const xtzData = await this.tezosService.getBalanceUSD(this.wallet.tezos.address);
-                this.wallet.tezos.balance = xtzData.balance;
-                this.wallet.tezos.balanceUSD = xtzData.balanceUSD;
-                console.log('XTZ Balance:', xtzData.balance, 'USD:', xtzData.balanceUSD);
-            } catch (error) {
-                console.error('XTZ balance fetch failed:', error);
-            }
-            
-            // Fetch Tron balance
-            try {
-                const trxData = await this.tronService.getBalanceUSD(this.wallet.tron.address);
-                this.wallet.tron.balance = trxData.balance;
-                this.wallet.tron.balanceUSD = trxData.balanceUSD;
-                console.log('TRX Balance:', trxData.balance, 'USD:', trxData.balanceUSD);
-            } catch (error) {
-                console.error('TRX balance fetch failed:', error);
-            }
-            
-            // Fetch Solana balance
-            try {
-                const solData = await this.solanaService.getBalanceUSD(this.wallet.solana.address);
-                this.wallet.solana.balance = solData.balance;
-                this.wallet.solana.balanceUSD = solData.balanceUSD;
-                this.wallet.solana.transactions = await this.solanaService.getTransactions(this.wallet.solana.address);
-                console.log('SOL Balance:', solData.balance, 'USD:', solData.balanceUSD);
-                console.log('SOL Address:', this.wallet.solana.address);
-            } catch (error) {
-                console.error('SOL balance fetch failed:', error);
-            }
-            
-            // Fetch DGAGE balance
-            try {
-                const dgageBalance = await this.dgageService.getBalance(this.wallet.ethereum.address);
-                const dgageTransactions = await this.dgageService.getTransactions(this.wallet.ethereum.address);
-                this.wallet.dgage = {
-                    address: this.wallet.ethereum.address, // Same as ETH address
-                    balance: dgageBalance,
-                    balanceUSD: '0.00', // No market price yet
-                    transactions: dgageTransactions
-                };
-                console.log('DGAGE Balance:', dgageBalance);
-                console.log('DGAGE Transactions:', dgageTransactions.length);
-            } catch (error) {
-                console.error('DGAGE balance fetch failed:', error);
-            }
-            
-            // Fetch Polygon (POL) balance
-            try {
-                const polBalanceRaw = await this.polygonService.getBalance(this.wallet.ethereum.address);
-                const polBalance = parseFloat(polBalanceRaw).toFixed(8); // Format to 8 decimals
-                const polPrice = await this.polygonService.getPrice();
-                const polBalanceUSD = (parseFloat(polBalance) * polPrice).toFixed(2);
-                this.wallet.polygon = {
-                    address: this.wallet.ethereum.address, // Same as ETH address
-                    balance: polBalance,
-                    balanceUSD: polBalanceUSD,
-                    transactions: [] // Empty for now
-                };
-                console.log('POL Balance:', polBalance, 'USD:', polBalanceUSD);
-            } catch (error) {
-                console.error('POL balance fetch failed:', error);
-            }
-            
-            // Scan for additional tokens on Ethereum and Polygon
-            try {
-                console.log('Scanning for additional tokens...');
-                const [ethTokens, polyTokens] = await Promise.all([
-                    this.tokenScanner.scanEthereumTokens(this.wallet.ethereum.address),
-                    this.tokenScanner.scanPolygonTokens(this.wallet.ethereum.address)
-                ]);
-                
-                // Store detected tokens
-                this.wallet.detectedTokens = {
-                    ethereum: ethTokens,
-                    polygon: polyTokens
-                };
-                
-                console.log('Token scan complete!', ethTokens.length, 'ETH tokens,', polyTokens.length, 'Polygon tokens');
-            } catch (error) {
-                console.error('Token scan failed:', error);
-                this.wallet.detectedTokens = { ethereum: [], polygon: [] };
-            }
-            
-            console.log('Balance fetch complete!');
-            
-            // Cache the balances
-            this.cacheBalances();
-            
+            console.log('Token scan complete!', ethTokens.length, 'ETH tokens,', polyTokens.length, 'Polygon tokens');
+            updateUI();
         } catch (error) {
-            console.error('Failed to fetch balances:', error);
-            console.log('Using cached balances (if available)');
+            console.error('Token scan failed:', error);
+            this.wallet.detectedTokens = { ethereum: [], polygon: [] };
         }
+        
+        console.log('Balance fetch complete!');
+        this.cacheBalances();
+        this.isFetching = false;
     }
     
     async getDogePrice() {
         try {
             const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=dogecoin');
             const data = await response.json();
-            return data.dogecoin?.usd || 0;
+            return data.dogecoin?.usd || 0.35; // Fallback price
         } catch (error) {
             console.error('Failed to fetch Dogecoin price:', error);
-            return 0;
+            return 0.35; // Fallback price
         }
     }
     
@@ -302,10 +423,10 @@ class WalletService {
         try {
             const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=litecoin');
             const data = await response.json();
-            return data.litecoin?.usd || 0;
+            return data.litecoin?.usd || 100; // Fallback price
         } catch (error) {
-            console.error('Failed to fetch DOGE price:', error);
-            return 0;
+            console.error('Failed to fetch Litecoin price:', error);
+            return 100; // Fallback price
         }
     }
     
