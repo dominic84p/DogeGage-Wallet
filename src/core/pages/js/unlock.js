@@ -1,8 +1,7 @@
 // Unlock Wallet Page
 function renderUnlock() {
-    // Hide tawk.to on unlock page
-    hideTawkTo();
-    
+
+
     return `
         <div class="auth-page">
             <div class="auth-bg">
@@ -51,20 +50,20 @@ function renderUnlock() {
 
 async function handleUnlock(event) {
     event.preventDefault();
-    
+
     const password = document.getElementById('password').value;
     const errorEl = document.getElementById('error-message');
     const btn = document.getElementById('unlock-btn');
-    
+
     errorEl.textContent = '';
     btn.disabled = true;
     btn.textContent = 'Unlocking...';
-    
+
     try {
         // Decrypt and load wallet
         const seedPhrase = await encryptionService.loadWallet(password);
         await walletService.importFromSeed(seedPhrase);
-        
+
         // Check if there's a redirect target
         const redirectTo = sessionStorage.getItem('redirectAfterUnlock');
         if (redirectTo) {
@@ -73,14 +72,14 @@ async function handleUnlock(event) {
         } else {
             router.navigate('/wallet');
         }
-        
+
         // Fetch exchange rates and balances in background (progressive updates)
         fetchExchangeRates();
         walletService.fetchBalances();
-        
+
     } catch (error) {
-        errorEl.textContent = error.message === 'Invalid password or corrupted data' 
-            ? 'Incorrect password' 
+        errorEl.textContent = error.message === 'Invalid password or corrupted data'
+            ? 'Incorrect password'
             : error.message;
         btn.disabled = false;
         btn.innerHTML = 'Unlock Wallet →';

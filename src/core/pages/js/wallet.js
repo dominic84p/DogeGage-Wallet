@@ -46,7 +46,7 @@ async function fetchExchangeRates() {
     try {
         const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/rates');
         const data = await response.json();
-        
+
         if (data && data.rates) {
             exchangeRates = {
                 'usd': 1,
@@ -72,7 +72,7 @@ async function fetchExchangeRates() {
 function convertCurrency(usdAmount) {
     const rate = exchangeRates[selectedCurrency];
     const converted = parseFloat(usdAmount) * rate;
-    
+
     // Format based on currency (no decimals for JPY, KRW)
     if (selectedCurrency === 'jpy' || selectedCurrency === 'krw') {
         return Math.round(converted).toLocaleString();
@@ -81,19 +81,18 @@ function convertCurrency(usdAmount) {
 }
 
 function renderWallet() {
-    // Hide tawk.to on wallet page
-    hideTawkTo();
-    
+
+
     const wallet = walletService.getWallet();
     if (!wallet) {
         router.navigate('/');
         return '';
     }
-    
+
     const totalBalance = walletService.getTotalBalance();
     const totalBalanceConverted = convertCurrency(totalBalance);
     const isLoading = walletService.isBalancesLoading();
-    
+
     // Get selected asset data
     let asset, assetName, assetSymbol, chainName;
     if (selectedAsset === 'bitcoin') {
@@ -142,7 +141,7 @@ function renderWallet() {
         assetSymbol = 'SOL';
         chainName = 'Solana';
     }
-    
+
     return `
         <div class="wallet-page">
             <nav class="wallet-nav">
@@ -182,38 +181,38 @@ function renderWallet() {
                     </div>
                     <div class="wallet-list">
                         ${renderChainGroup('Bitcoin', 'bitcoin', '#f7931a', [
-                            { name: 'Bitcoin', symbol: 'BTC', asset: wallet.bitcoin, key: 'bitcoin' },
-                            { name: 'Dogecoin', symbol: 'DOGE', asset: wallet.dogecoin, key: 'dogecoin' },
-                            { name: 'Litecoin', symbol: 'LTC', asset: wallet.litecoin, key: 'litecoin' }
-                        ])}
+        { name: 'Bitcoin', symbol: 'BTC', asset: wallet.bitcoin, key: 'bitcoin' },
+        { name: 'Dogecoin', symbol: 'DOGE', asset: wallet.dogecoin, key: 'dogecoin' },
+        { name: 'Litecoin', symbol: 'LTC', asset: wallet.litecoin, key: 'litecoin' }
+    ])}
                         ${renderChainGroup('Ethereum', 'ethereum', '#627eea', [
-                            { name: 'Ethereum', symbol: 'ETH', asset: wallet.ethereum, key: 'ethereum' },
-                            ...(wallet.polygon ? [{ name: 'Polygon', symbol: 'POL', asset: wallet.polygon, key: 'polygon' }] : []),
-                            ...(wallet.dgage ? [{ name: 'DogeGage Token', symbol: 'DGAGE', asset: wallet.dgage, key: 'dgage' }] : []),
-                            ...(wallet.detectedTokens && wallet.detectedTokens.ethereum ? wallet.detectedTokens.ethereum.map(token => ({
-                                name: token.name,
-                                symbol: token.symbol,
-                                asset: token,
-                                key: `eth-token-${token.contractAddress}`
-                            })) : [])
-                        ])}
-                        ${wallet.detectedTokens && wallet.detectedTokens.polygon && wallet.detectedTokens.polygon.length > 0 ? renderChainGroup('Polygon Tokens', 'polygon-tokens', '#8247e5', 
-                            wallet.detectedTokens.polygon.map(token => ({
-                                name: token.name,
-                                symbol: token.symbol,
-                                asset: token,
-                                key: `poly-token-${token.contractAddress}`
-                            }))
-                        ) : ''}
+        { name: 'Ethereum', symbol: 'ETH', asset: wallet.ethereum, key: 'ethereum' },
+        ...(wallet.polygon ? [{ name: 'Polygon', symbol: 'POL', asset: wallet.polygon, key: 'polygon' }] : []),
+        ...(wallet.dgage ? [{ name: 'DogeGage Token', symbol: 'DGAGE', asset: wallet.dgage, key: 'dgage' }] : []),
+        ...(wallet.detectedTokens && wallet.detectedTokens.ethereum ? wallet.detectedTokens.ethereum.map(token => ({
+            name: token.name,
+            symbol: token.symbol,
+            asset: token,
+            key: `eth-token-${token.contractAddress}`
+        })) : [])
+    ])}
+                        ${wallet.detectedTokens && wallet.detectedTokens.polygon && wallet.detectedTokens.polygon.length > 0 ? renderChainGroup('Polygon Tokens', 'polygon-tokens', '#8247e5',
+        wallet.detectedTokens.polygon.map(token => ({
+            name: token.name,
+            symbol: token.symbol,
+            asset: token,
+            key: `poly-token-${token.contractAddress}`
+        }))
+    ) : ''}
                         ${renderChainGroup('Tezos', 'tezos', '#2c7df7', [
-                            { name: 'Tezos', symbol: 'XTZ', asset: wallet.tezos, key: 'tezos' }
-                        ])}
+        { name: 'Tezos', symbol: 'XTZ', asset: wallet.tezos, key: 'tezos' }
+    ])}
                         ${renderChainGroup('Tron', 'tron', '#ef0027', [
-                            { name: 'Tron', symbol: 'TRX', asset: wallet.tron, key: 'tron' }
-                        ])}
+        { name: 'Tron', symbol: 'TRX', asset: wallet.tron, key: 'tron' }
+    ])}
                         ${renderChainGroup('Solana', 'solana', '#14f195', [
-                            { name: 'Solana', symbol: 'SOL', asset: wallet.solana, key: 'solana' }
-                        ])}
+        { name: 'Solana', symbol: 'SOL', asset: wallet.solana, key: 'solana' }
+    ])}
                     </div>
                 </aside>
                 
@@ -306,7 +305,7 @@ function renderChainGroup(chainName, chainKey, color, assets) {
     const isLoading = walletService.isBalancesLoading();
     const totalUSD = assets.reduce((sum, a) => sum + parseFloat(a.asset.balanceUSD || 0), 0).toFixed(2);
     const totalConverted = convertCurrency(totalUSD);
-    
+
     // Logo mapping
     const logoMap = {
         'bitcoin': 'src/assets/crypto/SVG/btc.svg',
@@ -319,7 +318,7 @@ function renderChainGroup(chainName, chainKey, color, assets) {
         'tron': 'src/assets/crypto/SVG/trx.svg',
         'solana': 'src/assets/crypto/SVG/sol.svg'
     };
-    
+
     return `
         <div class="chain-group">
             <div class="chain-header" onclick="toggleChain('${chainKey}')">
@@ -359,9 +358,9 @@ function renderWalletItem(name, symbol, color, asset, active) {
         'TRX': 'src/assets/crypto/SVG/trx.svg',
         'SOL': 'src/assets/crypto/SVG/sol.svg'
     };
-    
+
     const isLoading = walletService.isBalancesLoading();
-    
+
     return `
         <div class="wallet-item ${active ? 'active' : ''}" onclick="selectAsset('${symbol.toLowerCase()}')">
             <div class="wallet-icon-small" style="background: transparent;">
@@ -387,7 +386,7 @@ function renderTransaction(tx, symbol) {
     const date = new Date(tx.timestamp).toLocaleDateString();
     const time = new Date(tx.timestamp).toLocaleTimeString();
     const isSent = tx.type === 'sent';
-    
+
     return `
         <div class="transaction-item">
             <div class="tx-icon ${isSent ? 'sent' : 'received'}">
@@ -504,7 +503,7 @@ function renderSendForm(asset, assetName, assetSymbol) {
             </div>
         `;
     }
-    
+
     // Stage 2: Confirmation
     if (sendStage === 'confirm' && pendingTransaction) {
         return `
@@ -549,7 +548,7 @@ function renderSendForm(asset, assetName, assetSymbol) {
             </div>
         `;
     }
-    
+
     // Stage 3: Sending
     if (sendStage === 'sending') {
         return `
@@ -562,7 +561,7 @@ function renderSendForm(asset, assetName, assetSymbol) {
             </div>
         `;
     }
-    
+
     // Stage 4: Success
     if (sendStage === 'success' && pendingTransaction && pendingTransaction.txHash) {
         return `
@@ -618,35 +617,35 @@ function setMaxAmount(balance) {
 
 function updateSendingSummary() {
     const amount = document.getElementById('sendAmount').value;
-    const symbol = selectedAsset === 'bitcoin' ? 'BTC' : 
-                   selectedAsset === 'dogecoin' ? 'DOGE' :
-                   selectedAsset === 'litecoin' ? 'LTC' :
-                   selectedAsset === 'ethereum' ? 'ETH' :
-                   selectedAsset === 'polygon' ? 'POL' :
-                   selectedAsset === 'dgage' ? 'DGAGE' :
-                   selectedAsset === 'tezos' ? 'XTZ' : 
-                   selectedAsset === 'tron' ? 'TRX' : 
-                   selectedAsset === 'solana' ? 'SOL' : '';
+    const symbol = selectedAsset === 'bitcoin' ? 'BTC' :
+        selectedAsset === 'dogecoin' ? 'DOGE' :
+            selectedAsset === 'litecoin' ? 'LTC' :
+                selectedAsset === 'ethereum' ? 'ETH' :
+                    selectedAsset === 'polygon' ? 'POL' :
+                        selectedAsset === 'dgage' ? 'DGAGE' :
+                            selectedAsset === 'tezos' ? 'XTZ' :
+                                selectedAsset === 'tron' ? 'TRX' :
+                                    selectedAsset === 'solana' ? 'SOL' : '';
     document.getElementById('sendingSummary').textContent = `${amount || 0} ${symbol}`;
 }
 
 function reviewTransaction() {
     const address = document.getElementById('sendAddress').value;
     const amount = document.getElementById('sendAmount').value;
-    
+
     if (!address || !amount) {
         alert('Please fill in all fields');
         return;
     }
-    
+
     if (parseFloat(amount) <= 0) {
         alert('Amount must be greater than 0');
         return;
     }
-    
+
     const wallet = walletService.getWallet();
     if (!wallet) return;
-    
+
     // Check balance
     let balance;
     if (selectedAsset === 'bitcoin') {
@@ -668,12 +667,12 @@ function reviewTransaction() {
     } else if (selectedAsset === 'tron') {
         balance = parseFloat(wallet.tron.balance);
     }
-    
+
     if (parseFloat(amount) > balance) {
         alert(`Insufficient balance. You have ${balance}`);
         return;
     }
-    
+
     // Store transaction details and move to confirmation stage
     pendingTransaction = {
         address: address,
@@ -698,14 +697,14 @@ function backToSendForm() {
 
 async function executeSendTransaction() {
     if (!pendingTransaction) return;
-    
+
     // Move to sending stage
     sendStage = 'sending';
     document.getElementById('app').innerHTML = renderWallet();
-    
+
     try {
         let txHash;
-        
+
         if (selectedAsset === 'bitcoin') {
             txHash = await sendBitcoin(pendingTransaction.address, pendingTransaction.amount);
         } else if (selectedAsset === 'dogecoin') {
@@ -731,7 +730,7 @@ async function executeSendTransaction() {
         } else if (selectedAsset === 'tron') {
             txHash = await sendTron(pendingTransaction.address, pendingTransaction.amount);
         }
-        
+
         if (txHash) {
             // Get explorer URL based on asset
             let explorerUrl = '';
@@ -752,15 +751,15 @@ async function executeSendTransaction() {
             } else if (selectedAsset === 'tron') {
                 explorerUrl = `https://tronscan.org/#/transaction/${txHash}`;
             }
-            
+
             // Update pending transaction with result
             pendingTransaction.txHash = txHash;
             pendingTransaction.explorerUrl = explorerUrl;
-            
+
             // Move to success stage
             sendStage = 'success';
             document.getElementById('app').innerHTML = renderWallet();
-            
+
             // Refresh balances in background
             walletService.fetchBalances();
         }
@@ -774,7 +773,7 @@ async function executeSendTransaction() {
 function changeCurrency(currency) {
     selectedCurrency = currency;
     localStorage.setItem('selectedCurrency', currency);
-    
+
     // Just re-render with new currency (no need to fetch again)
     document.getElementById('app').innerHTML = renderWallet();
 }
@@ -784,17 +783,17 @@ function changeCurrency(currency) {
 async function sendDGAGE(toAddress, amount) {
     const wallet = walletService.getWallet();
     if (!wallet) throw new Error('Wallet not found');
-    
+
     // Get private key from mnemonic using ethers
     const { ethers } = window.cryptoLibs;
     const hdNode = ethers.utils.HDNode.fromMnemonic(wallet.mnemonic);
     const path = "m/44'/60'/0'/0/0";
     const child = hdNode.derivePath(path);
     const privateKey = child.privateKey;
-    
+
     console.log('Sending DGAGE transaction...');
     const result = await walletService.dgageService.sendDGAGE(privateKey, toAddress, amount);
-    
+
     if (result && result.success && result.txHash) {
         return result.txHash;
     } else if (result && result.txHash) {
@@ -830,7 +829,7 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
         console.log('No chart data for', symbol);
         return;
     }
-    
+
     // Update active button
     document.querySelectorAll('.timeframe-btn').forEach(btn => btn.classList.remove('active'));
     if (buttonEl) {
@@ -839,11 +838,11 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
         const firstBtn = document.querySelector('.timeframe-btn');
         if (firstBtn) firstBtn.classList.add('active');
     }
-    
+
     try {
         const cacheKey = `${coinId}-${days}`;
         let data = null;
-        
+
         // Check cache - must have valid prices array
         const cached = chartCache[cacheKey];
         if (cached && Array.isArray(cached.data?.prices) && cached.data.prices.length > 0 && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
@@ -853,21 +852,21 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
             // Always fetch fresh if cache invalid
             console.log('Fetching fresh chart data for', symbol);
             const response = await fetch(`https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/chart?id=${coinId}&days=${days}`);
-            
+
             if (!response.ok) {
                 console.error('Chart API error:', response.status);
                 return;
             }
-            
+
             data = await response.json();
             console.log('Chart response for', symbol, '- prices:', data.prices?.length || 0);
-            
+
             // Only cache valid data
             if (Array.isArray(data.prices) && data.prices.length > 0) {
                 chartCache[cacheKey] = { data, timestamp: Date.now() };
             }
         }
-        
+
         if (!Array.isArray(data?.prices) || data.prices.length === 0) {
             console.error('No valid price data for', symbol);
             delete chartCache[cacheKey];
@@ -879,7 +878,7 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
             }
             return;
         }
-        
+
         const prices = data.prices;
         const labels = prices.map(p => {
             const date = new Date(p[0]);
@@ -890,19 +889,19 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
             }
         });
         const values = prices.map(p => p[1]);
-        
+
         // Determine if price went up or down
         const priceChange = values[values.length - 1] - values[0];
         const chartColor = priceChange >= 0 ? '#4ade80' : '#ef4444';
-        
+
         const ctx = document.getElementById('priceChart');
         if (!ctx) return;
-        
+
         // Destroy existing chart
         if (priceChartInstance) {
             priceChartInstance.destroy();
         }
-        
+
         priceChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -929,7 +928,7 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
                         mode: 'index',
                         intersect: false,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return '$' + context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             }
                         }
@@ -953,7 +952,7 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
                         },
                         ticks: {
                             color: '#888',
-                            callback: function(value) {
+                            callback: function (value) {
                                 return '$' + value.toLocaleString();
                             }
                         }
@@ -965,7 +964,7 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
                 }
             }
         });
-        
+
     } catch (error) {
         console.error('Failed to load price chart:', error);
     }
@@ -973,15 +972,15 @@ async function loadPriceChart(symbol, days = 1, buttonEl = null) {
 
 // Auto-load chart when asset is selected
 function initPriceChart() {
-    const symbol = selectedAsset === 'bitcoin' ? 'BTC' : 
-                   selectedAsset === 'ethereum' ? 'ETH' :
-                   selectedAsset === 'dogecoin' ? 'DOGE' :
-                   selectedAsset === 'litecoin' ? 'LTC' :
-                   selectedAsset === 'solana' ? 'SOL' :
-                   selectedAsset === 'tezos' ? 'XTZ' :
-                   selectedAsset === 'tron' ? 'TRX' :
-                   selectedAsset === 'polygon' ? 'POL' : null;
-    
+    const symbol = selectedAsset === 'bitcoin' ? 'BTC' :
+        selectedAsset === 'ethereum' ? 'ETH' :
+            selectedAsset === 'dogecoin' ? 'DOGE' :
+                selectedAsset === 'litecoin' ? 'LTC' :
+                    selectedAsset === 'solana' ? 'SOL' :
+                        selectedAsset === 'tezos' ? 'XTZ' :
+                            selectedAsset === 'tron' ? 'TRX' :
+                                selectedAsset === 'polygon' ? 'POL' : null;
+
     if (symbol && document.getElementById('priceChart')) {
         loadPriceChart(symbol, 1);
     }
@@ -989,7 +988,7 @@ function initPriceChart() {
 
 // Call initPriceChart after render
 const originalSelectAsset = selectAsset;
-selectAsset = function(asset) {
+selectAsset = function (asset) {
     originalSelectAsset(asset);
     setTimeout(initPriceChart, 100);
 };

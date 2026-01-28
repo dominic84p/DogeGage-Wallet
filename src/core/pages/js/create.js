@@ -1,8 +1,7 @@
 // Create Wallet Page
 function renderCreate() {
-    // Hide tawk.to on create page
-    hideTawkTo();
-    
+
+
     return `
         <div class="landing-page">
             <div class="bg-gradient"></div>
@@ -64,7 +63,7 @@ function renderCreate() {
 
 function renderSeedPhrase(mnemonic) {
     const words = mnemonic.split(' ');
-    
+
     return `
         <div class="landing-page">
             <div class="bg-gradient"></div>
@@ -126,42 +125,42 @@ let encryptedWalletData = null;
 async function generateWallet() {
     const password = document.getElementById('createPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    
+
     if (!password) {
         alert('Please enter a password');
         return;
     }
-    
+
     if (password.length < 8) {
         alert('Password must be at least 8 characters');
         return;
     }
-    
+
     if (password !== confirmPassword) {
         alert('Passwords do not match');
         return;
     }
-    
+
     try {
         // Generate random mnemonic
         const entropy = ethers.utils.randomBytes(16);
         const mnemonic = ethers.utils.entropyToMnemonic(entropy);
-        
+
         // Save for later
         generatedMnemonic = mnemonic;
-        
+
         // Encrypt and save
         await encryptionService.saveWallet(mnemonic, password);
-        
+
         // Wait a bit for localStorage to sync
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         // Store encrypted data for backup
         encryptedWalletData = localStorage.getItem('dogegage_wallet');
-        
+
         // Show seed phrase
         document.getElementById('app').innerHTML = renderSeedPhrase(mnemonic);
-        
+
     } catch (error) {
         console.error('Failed to generate wallet:', error);
         alert('Failed to generate wallet: ' + error.message);
@@ -173,48 +172,48 @@ function downloadBackupFile() {
     try {
         // Get encrypted wallet data from localStorage
         const encryptedData = localStorage.getItem('encryptedWallet');
-        
+
         console.log('encryptedWalletData:', encryptedWalletData ? 'exists' : 'null');
         console.log('localStorage.encryptedWallet:', encryptedData ? 'exists' : 'null');
         console.log('All localStorage keys:', Object.keys(localStorage));
-        
+
         if (!encryptedData) {
             console.error('No wallet data found');
             alert('No wallet data available. Please complete wallet creation first.');
             return;
         }
-        
+
         console.log('Creating backup with data length:', encryptedData.length);
-        
+
         const backup = {
             version: '1.0',
             timestamp: new Date().toISOString(),
             encryptedWallet: encryptedData
         };
-        
+
         const json = JSON.stringify(backup, null, 2);
         console.log('Backup JSON created, length:', json.length);
-        
+
         const blob = new Blob([json], { type: 'application/json' });
         console.log('Blob created, size:', blob.size);
-        
+
         const url = URL.createObjectURL(blob);
         console.log('Blob URL created:', url);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `tuffbackup.dogegage`;
         console.log('Download link created with filename:', a.download);
-        
+
         document.body.appendChild(a);
         console.log('Link appended to body');
-        
+
         a.click();
         console.log('Link clicked');
-        
+
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         console.log('✅ Backup file download triggered successfully');
     } catch (error) {
         console.error('❌ Backup download error:', error);
@@ -233,30 +232,30 @@ function copySeedPhrase() {
 
 async function confirmSeedPhrase() {
     const checkbox = document.getElementById('savedCheckbox');
-    
+
     if (!checkbox.checked) {
         alert('Please confirm you have saved your seed phrase');
         return;
     }
-    
+
     // Change button to loading
     const button = document.getElementById('nextButton');
     button.disabled = true;
     button.textContent = 'Loading...';
-    
+
     try {
         // Import the wallet (this saves it to localStorage)
         await walletService.importFromSeed(generatedMnemonic);
-        
+
         // Wait for save to complete
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Fetch balances
         await walletService.fetchBalances();
-        
+
         // Show backup prompt modal
         showBackupPrompt();
-        
+
     } catch (error) {
         console.error('Failed to create wallet:', error);
         alert('Failed to create wallet: ' + error.message);
