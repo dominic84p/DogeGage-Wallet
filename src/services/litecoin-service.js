@@ -53,13 +53,29 @@ class LitecoinService {
     // Get Litecoin balance from API
     async getBalance(address) {
         try {
-            // Use worker proxy for Blockchair
-            const response = await fetch(`https://wallet-api.therealdominic84plays.workers.dev/api/blockchair/litecoin/${address}`);
+            // Try 1: Worker proxy for Blockchair
+            try {
+                const response = await fetch(`https://wallet-api.therealdominic84plays.workers.dev/api/blockchair/litecoin/${address}`);
+                const data = await response.json();
+                
+                if (data && data.data && data.data[address]) {
+                    const balanceSatoshis = data.data[address].address.balance;
+                    const balance = balanceSatoshis / 100000000; // Convert from satoshis to LTC
+                    return balance.toFixed(8);
+                }
+            } catch (err) {
+                // Ignore worker error and try fallback
+                console.warn('Blockchair worker failed, trying fallback...');
+            }
+            
+            // Try 2: BlockCypher Fallback
+            // BlockCypher is reliable but has rate limits on free tier
+            const response = await fetch(`https://api.blockcypher.com/v1/ltc/main/addrs/${address}/balance`);
             const data = await response.json();
             
-            if (data && data.data && data.data[address]) {
-                const balanceSatoshis = data.data[address].address.balance;
-                const balance = balanceSatoshis / 100000000; // Convert from satoshis to LTC
+            if (data && typeof data.final_balance !== 'undefined') {
+                const balanceSatoshis = data.final_balance;
+                const balance = balanceSatoshis / 100000000;
                 return balance.toFixed(8);
             }
             
