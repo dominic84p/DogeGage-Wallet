@@ -80,35 +80,65 @@ async function sendLitecoin(toAddress, amount) {
         // Calculate fee (Litecoin has low fees, ~0.001 LTC typical)
         const fee = 100000; // 0.001 LTC in satoshis
 
+        let sendAmountSatoshis = amountSatoshis;
+
         // Select UTXOs
         let inputSum = 0;
         const selectedUtxos = [];
 
+        // Accumulate UTXOs until we have enough
         for (const utxo of utxos) {
             selectedUtxos.push(utxo);
             inputSum += utxo.value;
-
-            if (inputSum >= amountSatoshis + fee) {
+            if (inputSum >= sendAmountSatoshis + fee) {
                 break;
             }
         }
 
-        if (inputSum < amountSatoshis + fee) {
-            throw new Error(`Insufficient funds. Need ${amountSatoshis + fee} satoshis, have ${inputSum}`);
+        // "Send Max" Logic: If we are sending nearly everything, deduct fee
+        if (inputSum < sendAmountSatoshis + fee) {
+            // Check if we are trying to send everything we have (or close to it)
+            // If total inputs are enough to cover the fee at least...
+            if (inputSum > fee) {
+                console.log("Adjusting amount for max send...");
+                // Set amount to Total - Fee
+                sendAmountSatoshis = inputSum - fee;
+            } else {
+                throw new Error(`Insufficient funds. Need ${sendAmountSatoshis + fee} satoshis, have ${inputSum}`);
+            }
         }
 
         // Build transaction
         const psbt = new bitcoin.Psbt({ network: litecoinNetwork });
 
         // Add inputs
+        // FIX: For Legacy (non-segwit) inputs, we need nonWitnessUtxo (full tx hex)
+        // witnessUtxo is ONLY for proper SegWit inputs.
         for (const utxo of selectedUtxos) {
+
+            // We need to fetch the full transaction hex for this UTXO
+            // Try BlockCypher for raw hex (it's reliable for this)
+            let nonWitnessUtxoBuffer = null;
+
+            try {
+                const txRes = await fetch(`https://api.blockcypher.com/v1/ltc/main/txs/${utxo.transaction_hash}?includeHex=true`);
+                const txData = await txRes.json();
+                if (txData && txData.hex) {
+                    nonWitnessUtxoBuffer = Buffer.from(txData.hex, 'hex');
+                }
+            } catch (e) {
+                console.warn('Failed to fetch raw tx for input signing', e);
+            }
+
+            if (!nonWitnessUtxoBuffer) {
+                throw new Error(`Could not fetch full transaction hex for input ${utxo.transaction_hash}. Required for legacy signing.`);
+            }
+
             psbt.addInput({
                 hash: utxo.transaction_hash,
                 index: utxo.index,
-                witnessUtxo: {
-                    script: Buffer.from(utxo.script_hex, 'hex'),
-                    value: utxo.value,
-                },
+                nonWitnessUtxo: nonWitnessUtxoBuffer, // CRITICAL FIX for Legacy Addresses
+                // witnessUtxo: ... REMOVED because it causes "non-segwit script" error
             });
         }
 
