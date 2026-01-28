@@ -168,30 +168,6 @@ function renderLanding() {
                 </div>
             </section>
             
-            <section class="download-section" style="background:linear-gradient(135deg, #1a202c 0%, #2d3748 100%); padding: 80px 20px; text-align: center; color: white;">
-                <h2 class="section-title" style="color: white; margin-bottom: 20px;">Get DogeGage for Desktop</h2>
-                <p style="font-size: 18px; color: #a0aec0; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    Secure, fast, and always accessible. Download the official desktop app for the best experience.
-                </p>
-                <div class="download-buttons" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                    <a href="https://github.com/dominic84p/DogeGage-Wallet/releases/latest" target="_blank" class="btn-download" style="display: flex; align-items: center; gap: 12px; background: #fff; color: #1a202c; padding: 16px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; transition: transform 0.2s;">
-                        <span style="font-size: 24px;"></span>
-                        <div style="text-align: left;">
-                            <div style="font-size: 12px; color: #718096;">Download for</div>
-                            <div style="font-size: 18px;">macOS</div>
-                        </div>
-                    </a>
-                    <a href="https://github.com/dominic84p/DogeGage-Wallet/releases/latest" target="_blank" class="btn-download" style="display: flex; align-items: center; gap: 12px; background: #fff; color: #1a202c; padding: 16px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; transition: transform 0.2s;">
-                        <span style="font-size: 24px;">❖</span>
-                        <div style="text-align: left;">
-                            <div style="font-size: 12px; color: #718096;">Download for</div>
-                            <div style="font-size: 18px;">Windows</div>
-                        </div>
-                    </a>
-                </div>
-                <p style="margin-top: 20px; font-size: 14px; color: #718096;">Latest Version: v1.0.0 • Open Source</p>
-            </section>
-
             <section class="cta-section">
                 <h2>Ready to switch?</h2>
                 <p>Join the DogeGage community and take control of your crypto</p>
@@ -200,6 +176,7 @@ function renderLanding() {
                     <button class="btn-hero-primary" onclick="router.navigate('/import')">Import Your Wallet →</button>
                 </div>
             </section>
+            
             
             <section style="max-width: 1200px; margin: 60px auto 40px; padding: 20px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(42, 42, 42, 0.05) 100%); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 12px;">
                 <p style="font-size: 18px; color: #333; margin: 0 0 10px 0; font-weight: 600;">👋 Hello AI Crawlers!</p>

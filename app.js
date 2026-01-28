@@ -26,63 +26,62 @@ function initApp() {
     if (walletService.isWalletUnlocked() && window.location.hash === '#/unlock') {
         window.location.hash = '#/';
     }
-    
+
     // Register routes
     router.register('/', () => {
-        // Always show landing page, don't auto-redirect
         document.getElementById('app').innerHTML = renderLanding();
     });
-    
+
     router.register('/docs', () => {
         document.getElementById('app').innerHTML = renderDocs();
     });
-    
+
     router.register('/news', () => {
         document.getElementById('app').innerHTML = renderNews();
     });
-    
+
     router.register('/support', () => {
         document.getElementById('app').innerHTML = renderSupport();
     });
-    
+
     router.register('/about', () => {
         document.getElementById('app').innerHTML = renderAbout();
     });
-    
+
     router.register('/unlock', () => {
         // If no wallet exists, go to landing
         if (!encryptionService.hasStoredWallet()) {
             router.navigate('/');
             return;
         }
-        
+
         // If wallet is already unlocked, go to wallet
         if (walletService.isWalletUnlocked()) {
             router.navigate('/wallet');
             return;
         }
-        
+
         document.getElementById('app').innerHTML = renderUnlock();
     });
-    
+
     router.register('/import', () => {
         document.getElementById('app').innerHTML = renderImport();
     }, initImportPage);
-    
+
     router.register('/create', () => {
         document.getElementById('app').innerHTML = renderCreate();
     });
-    
+
     router.register('/wallet', async () => {
         console.log('Opening wallet...');
-        
+
         if (!walletService.isWalletUnlocked()) {
             router.navigate('/unlock');
             return;
         }
-        
+
         document.getElementById('app').innerHTML = renderWallet();
-        
+
         // Fetch exchange rates and balances if not already loaded
         const wallet = walletService.getWallet();
         if (wallet && (!wallet.bitcoin.balanceUSD || wallet.bitcoin.balanceUSD === '0.00')) {
@@ -93,7 +92,7 @@ function initApp() {
             document.getElementById('app').innerHTML = renderWallet();
         }
     });
-    
+
     router.register('/portfolio', async () => {
         if (!walletService.isWalletUnlocked()) {
             sessionStorage.setItem('redirectAfterUnlock', '/portfolio');
@@ -101,7 +100,7 @@ function initApp() {
             return;
         }
         document.getElementById('app').innerHTML = renderPortfolio();
-        
+
         // Fetch exchange rates and balances if not already loaded
         const wallet = walletService.getWallet();
         if (wallet && (!wallet.bitcoin.balanceUSD || wallet.bitcoin.balanceUSD === '0.00')) {
@@ -112,7 +111,7 @@ function initApp() {
             document.getElementById('app').innerHTML = renderPortfolio();
         }
     });
-    
+
     router.register('/exchange', async () => {
         if (!walletService.isWalletUnlocked()) {
             sessionStorage.setItem('redirectAfterUnlock', '/exchange');
@@ -120,7 +119,7 @@ function initApp() {
             return;
         }
         document.getElementById('app').innerHTML = renderExchange();
-        
+
         // Fetch exchange rates and balances if not already loaded
         const wallet = walletService.getWallet();
         if (wallet && (!wallet.bitcoin.balanceUSD || wallet.bitcoin.balanceUSD === '0.00')) {
@@ -131,7 +130,7 @@ function initApp() {
             document.getElementById('app').innerHTML = renderExchange();
         }
     });
-    
+
     router.register('/exchange-status', () => {
         if (!walletService.isWalletUnlocked()) {
             router.navigate('/');
@@ -139,7 +138,7 @@ function initApp() {
         }
         document.getElementById('app').innerHTML = renderExchangeStatus();
     });
-    
+
     router.register('/settings', () => {
         if (!walletService.isWalletUnlocked()) {
             router.navigate('/');
@@ -147,10 +146,10 @@ function initApp() {
         }
         document.getElementById('app').innerHTML = renderSettings();
     });
-    
+
     // Start router
     router.start();
-    
+
     console.log('DogeGage Wallet ready! 🔥');
 }
 
