@@ -1,8 +1,7 @@
 // Support Page
 function renderSupport() {
-    // Load tawk.to chat widget
-    loadTawkTo();
-    
+
+
     // Add FAQ structured data for SEO
     const faqSchema = {
         "@context": "https://schema.org",
@@ -50,7 +49,7 @@ function renderSupport() {
             }
         ]
     };
-    
+
     // Inject schema into page
     if (!document.getElementById('faq-schema')) {
         const script = document.createElement('script');
@@ -59,7 +58,7 @@ function renderSupport() {
         script.text = JSON.stringify(faqSchema);
         document.head.appendChild(script);
     }
-    
+
     return `
         <div class="support-page">
             <nav class="landing-nav">

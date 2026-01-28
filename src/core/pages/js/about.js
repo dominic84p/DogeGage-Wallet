@@ -1,8 +1,7 @@
 // About Us Page
 function renderAbout() {
-    // Load tawk.to chat widget
-    loadTawkTo();
-    
+
+
     return `
         <div class="about-page">
             <nav class="landing-nav">

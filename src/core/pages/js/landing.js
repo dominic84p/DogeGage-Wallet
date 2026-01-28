@@ -7,13 +7,12 @@
 
 // Landing Page
 function renderLanding() {
-    // Load tawk.to chat widget
-    loadTawkTo();
-    
+
+
     // Check if user has a wallet
     const hasWallet = encryptionService.hasStoredWallet();
     const isUnlocked = walletService.isWalletUnlocked();
-    
+
     return `
         <div class="landing-page">
             <div class="bg-gradient"></div>

@@ -1,8 +1,7 @@
 // Documentation Page
 function renderDocs() {
-    // Load tawk.to chat widget
-    loadTawkTo();
-    
+
+
     return `
         <div class="docs-page">
             <nav class="landing-nav">

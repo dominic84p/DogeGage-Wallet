@@ -1,8 +1,7 @@
 // News Page
 function renderNews() {
-    // Load tawk.to chat widget
-    loadTawkTo();
-    
+
+
     // News articles data
     const articles = [
         {
@@ -43,7 +42,7 @@ DGAGE is our native utility token with unlimited minting capability. Join our co
 Stay tuned for updates!`
         }
     ];
-    
+
     return `
         <div class="news-page">
             <nav class="landing-nav">
