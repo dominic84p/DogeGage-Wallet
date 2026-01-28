@@ -189,7 +189,7 @@ function renderLanding() {
                         </div>
                     </a>
                 </div>
-                <p style="margin-top: 20px; font-size: 14px; color: #718096;">Latest Version: v1.0.0 • Verified & Signed</p>
+                <p style="margin-top: 20px; font-size: 14px; color: #718096;">Latest Version: v1.0.0 • Open Source</p>
             </section>
 
             <section class="cta-section">

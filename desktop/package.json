@@ -27,11 +27,13 @@
     "mac": {
       "category": "public.app-category.finance",
       "target": "dmg",
-      "icon": "../src/assets/crypto/SVG/dgage.png"
+      "icon": "../src/assets/crypto/SVG/dgage.png",
+      "identity": null
     },
     "win": {
       "target": "nsis",
-      "icon": "../src/assets/crypto/SVG/dgage.png"
+      "icon": "../src/assets/crypto/SVG/dgage.png",
+      "sign": null
     }
   },
   "keywords": [],
