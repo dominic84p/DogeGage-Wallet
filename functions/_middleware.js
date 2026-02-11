@@ -195,7 +195,7 @@ const routes = {
                 <li>Connect to public blockchain APIs (necessary for balance/transaction data)</li>
                 <li>Use CoinGecko API for price data (no personal data sent)</li>
                 <li>Integrate ChangeNOW API for exchange (they have their own privacy policy)</li>
-                <li>Use Tawk.to for live chat support (optional, user-initiated)</li>
+
             </ul>
             
             <h2>DGAGE Token</h2>
@@ -255,7 +255,7 @@ const routes = {
             <h2>Support & Contact</h2>
             <ul>
                 <li><strong>Website:</strong> <a href="https://wallet.dogegage.xyz">wallet.dogegage.xyz</a></li>
-                <li><strong>Support:</strong> Live chat available on website (Tawk.to)</li>
+                <li><strong>Support:</strong> Community support available via Discord</li>
                 <li><strong>Discord:</strong> Community support and DGAGE airdrop submissions</li>
                 <li><strong>Documentation:</strong> <a href="https://wallet.dogegage.xyz/#/docs">wallet.dogegage.xyz/#/docs</a></li>
             </ul>
@@ -442,24 +442,24 @@ export async function onRequest(context) {
     const { request, next } = context;
     const url = new URL(request.url);
     const userAgent = request.headers.get('user-agent') || '';
-    
+
     // Only handle HTML requests
     if (!url.pathname.endsWith('.html') && !url.pathname.endsWith('/') && url.pathname.includes('.')) {
         return next();
     }
-    
+
     // Check if it's a bot
     if (!isBot(userAgent)) {
         return next();
     }
-    
+
     // Get route data
     const path = url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '');
     const route = routes[path] || routes['/'];
-    
+
     // Schema.org structured data
     let schemas = '';
-    
+
     if (path === '/') {
         schemas = `
         <script type="application/ld+json">
@@ -556,7 +556,7 @@ export async function onRequest(context) {
         }
         </script>`;
     }
-    
+
     // Generate SSR HTML for bots
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -597,7 +597,7 @@ export async function onRequest(context) {
     </footer>
 </body>
 </html>`;
-    
+
     return new Response(html, {
         headers: {
             'content-type': 'text/html;charset=UTF-8',

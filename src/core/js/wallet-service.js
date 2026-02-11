@@ -23,57 +23,57 @@ class WalletService {
         this.polygonService = new PolygonService();
         this.tokenScanner = new TokenScanner();
     }
-    
+
     setBalancesLoading(loading) {
         this.balancesLoading = loading;
     }
-    
+
     isBalancesLoading() {
         return this.balancesLoading;
     }
-    
+
     setInfuraKey(apiKey) {
         this.infuraApiKey = apiKey;
         this.ethereumService = new EthereumService(apiKey);
     }
-    
+
     async importFromSeed(mnemonic) {
         if (!window.cryptoLibs) {
             throw new Error('Crypto libraries not loaded');
         }
-        
+
         const { ethers } = window.cryptoLibs;
-        
+
         // Validate mnemonic
         try {
             ethers.utils.HDNode.fromMnemonic(mnemonic);
         } catch (e) {
             throw new Error('Invalid seed phrase');
         }
-        
+
         // Derive Ethereum address
         const ethData = this.ethereumService.deriveAddress(mnemonic);
-        
+
         // Derive Bitcoin address
         const btcData = this.bitcoinService.deriveAddress(mnemonic);
-        
+
         // Derive Dogecoin address
         const dogeData = this.dogecoinService.deriveAddress(mnemonic);
-        
+
         // Derive Litecoin address
         const ltcData = this.litecoinService.deriveAddress(mnemonic);
-        
+
         // Derive Tezos address (async because of Ed25519)
         const xtzData = await this.tezosService.deriveAddress(mnemonic);
-        
+
         // Derive Tron address
         const trxData = this.tronService.deriveAddress(mnemonic);
-        
+
         // Derive Solana address
         console.log('Deriving Solana address...');
         const solData = await this.solanaService.deriveAddress(mnemonic);
         console.log('Solana derived:', solData);
-        
+
         this.wallet = {
             mnemonic,
             bitcoin: {
@@ -124,34 +124,40 @@ class WalletService {
                 balance: '0.000000',
                 balanceUSD: '0.00',
                 transactions: []
+            },
+            polygon: {
+                address: ethData.address, // Same as ETH/Polygon
+                balance: '0.00000000',
+                balanceUSD: '0.00',
+                transactions: []
             }
         };
-        
+
         this.isUnlocked = true;
         sessionStorage.setItem('walletUnlocked', 'true');
         this.saveToStorage();
-        
+
         return this.wallet;
     }
-    
+
     async fetchBalances() {
         if (!this.wallet) return;
-        
+
         // Debounce - don't fetch if already fetching
         if (this.isFetching) {
             console.log('Already fetching balances, skipping...');
             return;
         }
         this.isFetching = true;
-        
+
         if (!this.infuraApiKey) {
             console.error('Infura API key not set');
             this.isFetching = false;
             return;
         }
-        
+
         console.log('Fetching balances...');
-        
+
         // Fetch all prices upfront in one call
         let prices = {};
         try {
@@ -161,10 +167,10 @@ class WalletService {
         } catch (e) {
             console.warn('Price fetch failed, using fallbacks');
         }
-        
+
         // Price helpers using cached prices
         const getPrice = (id, fallback) => prices[id]?.usd || fallback;
-        
+
         // Retry helper - tries up to 3 times with delay
         const withRetry = async (fn, name, retries = 3) => {
             for (let i = 0; i < retries; i++) {
@@ -180,7 +186,7 @@ class WalletService {
                 }
             }
         };
-        
+
         // Try to load cached balances first
         const cached = this.loadCachedBalances();
         if (cached) {
@@ -191,14 +197,24 @@ class WalletService {
             this.wallet.bitcoin.balanceUSD = cached.bitcoin?.balanceUSD || '0.00';
             this.wallet.dogecoin.balance = cached.dogecoin?.balance || '0.00';
             this.wallet.dogecoin.balanceUSD = cached.dogecoin?.balanceUSD || '0.00';
+            this.wallet.litecoin.balance = cached.litecoin?.balance || '0.00';
+            this.wallet.litecoin.balanceUSD = cached.litecoin?.balanceUSD || '0.00';
             this.wallet.tezos.balance = cached.tezos?.balance || '0.00';
             this.wallet.tezos.balanceUSD = cached.tezos?.balanceUSD || '0.00';
             this.wallet.tron.balance = cached.tron?.balance || '0.00';
             this.wallet.tron.balanceUSD = cached.tron?.balanceUSD || '0.00';
             this.wallet.solana.balance = cached.solana?.balance || '0.00';
             this.wallet.solana.balanceUSD = cached.solana?.balanceUSD || '0.00';
+            if (cached.polygon && this.wallet.polygon) {
+                this.wallet.polygon.balance = cached.polygon.balance || '0.00';
+                this.wallet.polygon.balanceUSD = cached.polygon.balanceUSD || '0.00';
+            }
+            if (cached.dgage && this.wallet.dgage) {
+                this.wallet.dgage.balance = cached.dgage.balance || '0.00';
+                this.wallet.dgage.balanceUSD = cached.dgage.balanceUSD || '0.00';
+            }
         }
-        
+
         // Helper to update UI after each chain loads
         const updateUI = () => {
             const hash = window.location.hash;
@@ -219,10 +235,10 @@ class WalletService {
                 }
             }
         };
-        
+
         // Fetch all chains in parallel, update UI as each completes
         const fetchPromises = [];
-        
+
         // Ethereum
         fetchPromises.push((async () => {
             try {
@@ -239,7 +255,7 @@ class WalletService {
                 console.error('ETH balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Bitcoin
         fetchPromises.push((async () => {
             try {
@@ -256,7 +272,7 @@ class WalletService {
                 console.error('BTC balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Dogecoin
         fetchPromises.push((async () => {
             try {
@@ -272,7 +288,7 @@ class WalletService {
                 console.error('DOGE balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Litecoin
         fetchPromises.push((async () => {
             try {
@@ -288,7 +304,7 @@ class WalletService {
                 console.error('LTC balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Tezos
         fetchPromises.push((async () => {
             try {
@@ -304,7 +320,7 @@ class WalletService {
                 console.error('XTZ balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Tron
         fetchPromises.push((async () => {
             try {
@@ -320,7 +336,7 @@ class WalletService {
                 console.error('TRX balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Solana
         fetchPromises.push((async () => {
             try {
@@ -337,7 +353,7 @@ class WalletService {
                 console.error('SOL balance fetch failed after retries:', error);
             }
         })());
-        
+
         // DGAGE
         fetchPromises.push((async () => {
             try {
@@ -357,7 +373,7 @@ class WalletService {
                 console.error('DGAGE balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Polygon
         fetchPromises.push((async () => {
             try {
@@ -379,10 +395,10 @@ class WalletService {
                 console.error('POL balance fetch failed after retries:', error);
             }
         })());
-        
+
         // Wait for all to complete
         await Promise.all(fetchPromises);
-        
+
         // Token scanning (do this after main balances)
         try {
             console.log('Scanning for additional tokens...');
@@ -390,24 +406,24 @@ class WalletService {
                 this.tokenScanner.scanEthereumTokens(this.wallet.ethereum.address),
                 this.tokenScanner.scanPolygonTokens(this.wallet.ethereum.address)
             ]);
-            
+
             this.wallet.detectedTokens = {
                 ethereum: ethTokens,
                 polygon: polyTokens
             };
-            
+
             console.log('Token scan complete!', ethTokens.length, 'ETH tokens,', polyTokens.length, 'Polygon tokens');
             updateUI();
         } catch (error) {
             console.error('Token scan failed:', error);
             this.wallet.detectedTokens = { ethereum: [], polygon: [] };
         }
-        
+
         console.log('Balance fetch complete!');
         this.cacheBalances();
         this.isFetching = false;
     }
-    
+
     async getDogePrice() {
         try {
             const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=dogecoin');
@@ -418,7 +434,7 @@ class WalletService {
             return 0.35; // Fallback price
         }
     }
-    
+
     async getLtcPrice() {
         try {
             const response = await fetch('https://wallet-api.therealdominic84plays.workers.dev/api/coingecko/prices?ids=litecoin');
@@ -429,10 +445,10 @@ class WalletService {
             return 100; // Fallback price
         }
     }
-    
+
     cacheBalances() {
         if (!this.wallet) return;
-        
+
         const cache = {
             ethereum: {
                 balance: this.wallet.ethereum.balance,
@@ -446,6 +462,10 @@ class WalletService {
                 balance: this.wallet.dogecoin.balance,
                 balanceUSD: this.wallet.dogecoin.balanceUSD
             },
+            litecoin: {
+                balance: this.wallet.litecoin.balance,
+                balanceUSD: this.wallet.litecoin.balanceUSD
+            },
             tezos: {
                 balance: this.wallet.tezos.balance,
                 balanceUSD: this.wallet.tezos.balanceUSD
@@ -458,37 +478,45 @@ class WalletService {
                 balance: this.wallet.solana.balance,
                 balanceUSD: this.wallet.solana.balanceUSD
             },
+            polygon: this.wallet.polygon ? {
+                balance: this.wallet.polygon.balance,
+                balanceUSD: this.wallet.polygon.balanceUSD
+            } : null,
+            dgage: this.wallet.dgage ? {
+                balance: this.wallet.dgage.balance,
+                balanceUSD: this.wallet.dgage.balanceUSD
+            } : null,
             timestamp: Date.now()
         };
-        
+
         localStorage.setItem('cachedBalances', JSON.stringify(cache));
         console.log('Balances cached');
     }
-    
+
     loadCachedBalances() {
         try {
             const cached = localStorage.getItem('cachedBalances');
             if (!cached) return null;
-            
+
             const data = JSON.parse(cached);
-            
+
             // Check if cache is less than 5 minutes old
             const age = Date.now() - data.timestamp;
             if (age > 5 * 60 * 1000) {
                 console.log('Cache expired');
                 return null;
             }
-            
+
             return data;
         } catch (error) {
             console.error('Failed to load cached balances:', error);
             return null;
         }
     }
-    
+
     getTotalBalance() {
         if (!this.wallet) return 0;
-        
+
         const btcUSD = parseFloat(this.wallet.bitcoin.balanceUSD) || 0;
         const dogeUSD = parseFloat(this.wallet.dogecoin.balanceUSD) || 0;
         const ltcUSD = parseFloat(this.wallet.litecoin.balanceUSD) || 0;
@@ -496,31 +524,42 @@ class WalletService {
         const xtzUSD = parseFloat(this.wallet.tezos.balanceUSD) || 0;
         const trxUSD = parseFloat(this.wallet.tron.balanceUSD) || 0;
         const solUSD = parseFloat(this.wallet.solana.balanceUSD) || 0;
-        
-        return btcUSD + dogeUSD + ltcUSD + ethUSD + xtzUSD + trxUSD + solUSD;
+        const polUSD = parseFloat(this.wallet.polygon?.balanceUSD) || 0;
+        const dgageUSD = parseFloat(this.wallet.dgage?.balanceUSD) || 0;
+
+        return btcUSD + dogeUSD + ltcUSD + ethUSD + xtzUSD + trxUSD + solUSD + polUSD + dgageUSD;
     }
-    
+
     saveToStorage() {
         // TODO: Implement encrypted storage
         // For now, just store in memory
     }
-    
+
     lock() {
         this.isUnlocked = false;
         sessionStorage.removeItem('walletUnlocked');
     }
-    
+
     isWalletUnlocked() {
         // Check if wallet exists in memory AND unlock flag is set
         return this.wallet !== null && (this.isUnlocked || sessionStorage.getItem('walletUnlocked') === 'true');
     }
-    
+
     getWallet() {
         // Migration: Add dgage property if it doesn't exist
         if (this.wallet && !this.wallet.dgage && this.wallet.ethereum) {
             this.wallet.dgage = {
                 address: this.wallet.ethereum.address,
                 balance: '0.0000',
+                balanceUSD: '0.00',
+                transactions: []
+            };
+        }
+        // Migration: Add polygon property if it doesn't exist
+        if (this.wallet && !this.wallet.polygon && this.wallet.ethereum) {
+            this.wallet.polygon = {
+                address: this.wallet.ethereum.address,
+                balance: '0.00000000',
                 balanceUSD: '0.00',
                 transactions: []
             };

@@ -17,9 +17,25 @@
 }
 
 .exchange-section {
-    background: #2a2a2a;
-    border: 1px solid #333;
-    padding: 2rem;
+    background: rgba(15, 17, 26, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.exchange-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.1), transparent 70%);
+    pointer-events: none;
 }
 
 .exchange-section-header {
@@ -116,16 +132,18 @@
 }
 
 .exchange-select {
-    background: #1a1a1a;
-    border: 1px solid #444;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     color: white;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 1.5rem;
     cursor: pointer;
     outline: none;
-    min-width: 200px;
+    min-width: 220px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: all 0.2s;
 }
 
 .exchange-select:hover {
@@ -188,17 +206,20 @@
 }
 
 .exchange-swap {
-    width: 48px;
-    height: 48px;
-    background: #667eea;
-    border: none;
-    color: white;
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--primary);
     font-size: 1.5rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
 }
 
 .exchange-swap:hover {
@@ -214,8 +235,10 @@
 }
 
 .exchange-info-card {
-    background: #2a2a2a;
-    border: 1px solid #333;
+    background: rgba(15, 17, 26, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     padding: 2rem;
 }
 
@@ -292,7 +315,7 @@
     .exchange-fullscreen {
         grid-template-columns: 1fr;
     }
-    
+
     .exchange-info-card {
         position: static;
     }
@@ -308,44 +331,44 @@
         padding: 1rem;
         padding-bottom: 5rem;
     }
-    
+
     .exchange-header h2 {
         font-size: 1.5rem;
     }
-    
+
     .exchange-card {
         padding: 1.5rem;
     }
-    
+
     .exchange-form {
         gap: 1rem;
     }
-    
+
     .currency-select {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     .currency-dropdown {
         width: 100%;
     }
-    
+
     .exchange-input {
         font-size: 1.25rem;
     }
-    
+
     .exchange-rate {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     .btn-exchange {
         padding: 0.875rem;
         font-size: 0.95rem;
     }
-    
+
     /* Mobile bottom nav */
     .mobile-bottom-nav {
         display: flex;
@@ -359,7 +382,7 @@
         z-index: 100;
         justify-content: space-around;
     }
-    
+
     .mobile-nav-btn {
         display: flex;
         flex-direction: column;
@@ -374,11 +397,11 @@
         transition: all 0.2s;
         text-decoration: none;
     }
-    
+
     .mobile-nav-btn.active {
         color: var(--primary);
     }
-    
+
     .mobile-nav-btn span:first-child {
         font-size: 1.25rem;
     }

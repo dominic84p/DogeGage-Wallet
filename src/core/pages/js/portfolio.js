@@ -2,27 +2,27 @@
 let currentTimeframe = '7D'; // Default timeframe
 
 function renderPortfolio() {
-    // Hide tawk.to on portfolio page
-    hideTawkTo();
-    
     const wallet = walletService.getWallet();
     if (!wallet) {
         router.navigate('/');
         return '';
     }
-    
+
     const totalBalance = walletService.getTotalBalance();
     const totalBalanceConverted = convertCurrency(totalBalance);
-    
+
     // Get all assets
     const assets = [
         { name: 'Bitcoin', symbol: 'BTC', asset: wallet.bitcoin, color: '#f7931a', percentage: 300 },
         { name: 'Ethereum', symbol: 'ETH', asset: wallet.ethereum, color: '#627eea', percentage: 150 },
+        { name: 'Dogecoin', symbol: 'DOGE', asset: wallet.dogecoin, color: '#c2a633', percentage: 100 },
+        { name: 'Litecoin', symbol: 'LTC', asset: wallet.litecoin, color: '#bfbbbb', percentage: 80 },
         { name: 'Tezos', symbol: 'XTZ', asset: wallet.tezos, color: '#2c7df7', percentage: 80 },
         { name: 'Tron', symbol: 'TRX', asset: wallet.tron, color: '#eb0029', percentage: 50 },
-        { name: 'Solana', symbol: 'SOL', asset: wallet.solana, color: '#14f195', percentage: 200 }
+        { name: 'Solana', symbol: 'SOL', asset: wallet.solana, color: '#14f195', percentage: 200 },
+        ...(wallet.polygon ? [{ name: 'Polygon', symbol: 'POL', asset: wallet.polygon, color: '#8247e5', percentage: 60 }] : [])
     ];
-    
+
     return `
         <div class="wallet-page">
             <nav class="wallet-nav">
@@ -113,14 +113,14 @@ function renderPortfolio() {
 
 function renderAssetItem(asset) {
     const balanceUSD = parseFloat(asset.asset.balanceUSD || 0);
-    
+
     // Only show if user owns this crypto
     if (balanceUSD <= 0) return '';
-    
+
     // Calculate percentage of total portfolio
     const totalBalance = walletService.getTotalBalance();
     const percentage = totalBalance > 0 ? ((balanceUSD / totalBalance) * 100).toFixed(0) : 0;
-    
+
     return `
         <div class="asset-item" onclick="router.navigate('/wallet'); selectAsset('${asset.symbol.toLowerCase()}')">
             <div class="asset-color" style="background: ${asset.color};"></div>
@@ -176,24 +176,27 @@ function initPortfolioCharts() {
 function initDonutChart() {
     const canvas = document.getElementById('portfolioDonut');
     if (!canvas) return;
-    
+
     const wallet = walletService.getWallet();
     if (!wallet) return;
-    
+
     const assets = [
         { name: 'Bitcoin', color: '#f7931a', value: parseFloat(wallet.bitcoin.balanceUSD || 0) },
         { name: 'Ethereum', color: '#627eea', value: parseFloat(wallet.ethereum.balanceUSD || 0) },
+        { name: 'Dogecoin', color: '#c2a633', value: parseFloat(wallet.dogecoin.balanceUSD || 0) },
+        { name: 'Litecoin', color: '#bfbbbb', value: parseFloat(wallet.litecoin.balanceUSD || 0) },
         { name: 'Solana', color: '#14f195', value: parseFloat(wallet.solana.balanceUSD || 0) },
         { name: 'Tezos', color: '#2c7df7', value: parseFloat(wallet.tezos.balanceUSD || 0) },
-        { name: 'Tron', color: '#eb0029', value: parseFloat(wallet.tron.balanceUSD || 0) }
+        { name: 'Tron', color: '#eb0029', value: parseFloat(wallet.tron.balanceUSD || 0) },
+        { name: 'Polygon', color: '#8247e5', value: parseFloat(wallet.polygon?.balanceUSD || 0) }
     ];
-    
+
     const assetsWithBalance = assets.filter(a => a.value > 0);
-    
+
     if (assetsWithBalance.length === 0) {
         return;
     }
-    
+
     new Chart(canvas, {
         type: 'doughnut',
         data: {
@@ -223,7 +226,7 @@ function initDonutChart() {
 function initLineChart() {
     const canvas = document.getElementById('portfolioLineChart');
     if (!canvas) return;
-    
+
     // Show loading state
     const chartCard = canvas.closest('.portfolio-chart-card');
     const loadingDiv = document.createElement('div');
@@ -235,7 +238,7 @@ function initLineChart() {
     `;
     chartCard.appendChild(loadingDiv);
     canvas.style.opacity = '0';
-    
+
     // Fetch real price data from CoinGecko
     fetchCryptoPriceHistory().then(priceData => {
         // Remove loading state
@@ -246,7 +249,7 @@ function initLineChart() {
             renderMockChart(canvas);
             return;
         }
-        
+
         const cryptoColors = {
             bitcoin: '#f7931a',
             ethereum: '#627eea',
@@ -254,7 +257,7 @@ function initLineChart() {
             tezos: '#2c7df7',
             tron: '#eb0029'
         };
-        
+
         const cryptoNames = {
             bitcoin: 'Bitcoin',
             ethereum: 'Ethereum',
@@ -262,7 +265,7 @@ function initLineChart() {
             tezos: 'Tezos',
             tron: 'Tron'
         };
-        
+
         // Build datasets only for owned cryptos
         const datasets = priceData.ownedCryptos.map(crypto => ({
             label: cryptoNames[crypto],
@@ -274,7 +277,7 @@ function initLineChart() {
             borderWidth: 3,
             pointRadius: 0
         }));
-        
+
         new Chart(canvas, {
             type: 'line',
             data: {
@@ -300,7 +303,7 @@ function initLineChart() {
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 const value = context.parsed.y;
                                 const sign = value >= 0 ? '+' : '';
                                 return context.dataset.label + ': ' + sign + value.toFixed(2) + '%';
@@ -329,7 +332,7 @@ function initLineChart() {
                         },
                         ticks: {
                             color: '#888',
-                            callback: function(value) {
+                            callback: function (value) {
                                 const sign = value >= 0 ? '+' : '';
                                 return sign + value.toFixed(1) + '%';
                             }
@@ -345,7 +348,7 @@ async function fetchCryptoPriceHistory() {
     try {
         const wallet = walletService.getWallet();
         if (!wallet) return null;
-        
+
         // Only fetch data for cryptos user owns
         const ownedCryptos = [];
         if (parseFloat(wallet.bitcoin.balanceUSD || 0) > 0) ownedCryptos.push({ id: 'bitcoin', key: 'bitcoin' });
@@ -353,32 +356,32 @@ async function fetchCryptoPriceHistory() {
         if (parseFloat(wallet.solana.balanceUSD || 0) > 0) ownedCryptos.push({ id: 'solana', key: 'solana' });
         if (parseFloat(wallet.tezos.balanceUSD || 0) > 0) ownedCryptos.push({ id: 'tezos', key: 'tezos' });
         if (parseFloat(wallet.tron.balanceUSD || 0) > 0) ownedCryptos.push({ id: 'tron', key: 'tron' });
-        
+
         if (ownedCryptos.length === 0) return null;
-        
+
         const days = getTimeframeDays();
-        
+
         // Fetch with 2 second delay between requests to avoid rate limiting
         const results = [];
         for (let i = 0; i < ownedCryptos.length; i++) {
             if (i > 0) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
-            
+
             try {
                 const response = await fetch(`https://api.coingecko.com/api/v3/coins/${ownedCryptos[i].id}/market_chart?vs_currency=usd&days=${days}`);
-                
+
                 // Check if rate limited
                 if (response.status === 429) {
                     console.warn('Rate limited by CoinGecko, using fallback data');
                     return null;
                 }
-                
+
                 if (!response.ok) {
                     console.warn(`Failed to fetch ${ownedCryptos[i].id}: ${response.status}`);
                     return null;
                 }
-                
+
                 const data = await response.json();
                 results.push(data);
             } catch (err) {
@@ -386,7 +389,7 @@ async function fetchCryptoPriceHistory() {
                 return null;
             }
         }
-        
+
         // Convert prices to percentage gains (normalized to start at 0%)
         const priceData = {};
         results.forEach((result, index) => {
@@ -395,7 +398,7 @@ async function fetchCryptoPriceHistory() {
             const percentageGains = prices.map(price => ((price - startPrice) / startPrice) * 100);
             priceData[ownedCryptos[index].key] = percentageGains;
         });
-        
+
         // Create labels from timestamps
         const labels = results[0].prices.map(p => {
             const date = new Date(p[0]);
@@ -408,7 +411,7 @@ async function fetchCryptoPriceHistory() {
                 return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
             }
         });
-        
+
         return {
             labels,
             ownedCryptos: ownedCryptos.map(c => c.key),
@@ -423,7 +426,7 @@ async function fetchCryptoPriceHistory() {
 function renderMockChart(canvas) {
     const wallet = walletService.getWallet();
     if (!wallet) return;
-    
+
     // Only show cryptos user owns
     const cryptoColors = {
         bitcoin: '#f7931a',
@@ -432,7 +435,7 @@ function renderMockChart(canvas) {
         tezos: '#2c7df7',
         tron: '#eb0029'
     };
-    
+
     const cryptoNames = {
         bitcoin: 'Bitcoin',
         ethereum: 'Ethereum',
@@ -440,26 +443,26 @@ function renderMockChart(canvas) {
         tezos: 'Tezos',
         tron: 'Tron'
     };
-    
+
     const ownedCryptos = [];
     if (parseFloat(wallet.bitcoin.balanceUSD || 0) > 0) ownedCryptos.push('bitcoin');
     if (parseFloat(wallet.ethereum.balanceUSD || 0) > 0) ownedCryptos.push('ethereum');
     if (parseFloat(wallet.solana.balanceUSD || 0) > 0) ownedCryptos.push('solana');
     if (parseFloat(wallet.tezos.balanceUSD || 0) > 0) ownedCryptos.push('tezos');
     if (parseFloat(wallet.tron.balanceUSD || 0) > 0) ownedCryptos.push('tron');
-    
+
     if (ownedCryptos.length === 0) return;
-    
+
     // Adjust data points based on timeframe
-    const dataPoints = currentTimeframe === '24H' ? 24 : 
-                      currentTimeframe === '7D' ? 30 :
-                      currentTimeframe === '1M' ? 30 :
-                      currentTimeframe === '3M' ? 90 :
-                      currentTimeframe === '1Y' ? 365 : 100;
-    
+    const dataPoints = currentTimeframe === '24H' ? 24 :
+        currentTimeframe === '7D' ? 30 :
+            currentTimeframe === '1M' ? 30 :
+                currentTimeframe === '3M' ? 90 :
+                    currentTimeframe === '1Y' ? 365 : 100;
+
     // Fallback mock data showing percentage gains
     const now = Date.now();
-    const labels = Array.from({length: dataPoints}, (_, i) => {
+    const labels = Array.from({ length: dataPoints }, (_, i) => {
         const date = new Date(now - (dataPoints - i) * (currentTimeframe === '24H' ? 3600000 : 86400000));
         if (currentTimeframe === '24H') {
             return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -469,7 +472,7 @@ function renderMockChart(canvas) {
             return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         }
     });
-    
+
     const datasets = ownedCryptos.map(crypto => ({
         label: cryptoNames[crypto],
         data: generateMockPercentageData(dataPoints),
@@ -480,7 +483,7 @@ function renderMockChart(canvas) {
         borderWidth: 3,
         pointRadius: 0
     }));
-    
+
     new Chart(canvas, {
         type: 'line',
         data: {
@@ -506,7 +509,7 @@ function renderMockChart(canvas) {
                     borderWidth: 1,
                     padding: 12,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const value = context.parsed.y;
                             const sign = value >= 0 ? '+' : '';
                             return context.dataset.label + ': ' + sign + value.toFixed(2) + '%';
@@ -535,7 +538,7 @@ function renderMockChart(canvas) {
                     },
                     ticks: {
                         color: '#888',
-                        callback: function(value) {
+                        callback: function (value) {
                             const sign = value >= 0 ? '+' : '';
                             return sign + value.toFixed(1) + '%';
                         }
@@ -549,12 +552,12 @@ function renderMockChart(canvas) {
 function generateMockPercentageData(points) {
     const data = [];
     let current = 0; // Start at 0%
-    
+
     for (let i = 0; i < points; i++) {
         const change = (Math.random() - 0.5) * 3; // Random change between -1.5% and +1.5%
         current += change;
         data.push(current);
     }
-    
+
     return data;
 }

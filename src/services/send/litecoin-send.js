@@ -145,11 +145,11 @@ async function sendLitecoin(toAddress, amount) {
         // Add output (recipient)
         psbt.addOutput({
             address: toAddress,
-            value: amountSatoshis,
+            value: sendAmountSatoshis,
         });
 
         // Add change output if needed
-        const change = inputSum - amountSatoshis - fee;
+        const change = inputSum - sendAmountSatoshis - fee;
         if (change > 100000) { // 0.001 LTC dust threshold
             psbt.addOutput({
                 address: fromAddress,

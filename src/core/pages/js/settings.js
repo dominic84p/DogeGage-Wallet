@@ -126,7 +126,7 @@ function renderGeneralSettings() {
 function renderSecuritySettings() {
     const currentDelay = autoLockService.getDelay();
     const isEnabled = autoLockService.isEnabled();
-    
+
     return `
         <div class="settings-section">
             <h2>🔐 Security</h2>
@@ -255,7 +255,7 @@ function renderDangerSettings() {
 async function viewSeedPhrase() {
     const password = prompt('Enter your password to view seed phrase:');
     if (!password) return;
-    
+
     try {
         const seedPhrase = await encryptionService.loadWallet(password);
         alert(`Your Seed Phrase:\n\n${seedPhrase}\n\n⚠️ Never share your seed phrase!\n⚠️ Anyone with this can access your funds!`);
@@ -276,6 +276,8 @@ function clearWalletData() {
             // Wait a bit for download to start
             setTimeout(() => {
                 if (confirm('Backup downloaded. Proceed with forgetting wallet?')) {
+                    walletService.lock();
+                    sessionStorage.clear();
                     localStorage.clear();
                     alert('Wallet forgotten. Redirecting to home...');
                     router.navigate('/');
@@ -283,6 +285,8 @@ function clearWalletData() {
             }, 1000);
         } else {
             if (confirm('This action cannot be undone. Are you absolutely sure?')) {
+                walletService.lock();
+                sessionStorage.clear();
                 localStorage.clear();
                 alert('Wallet forgotten. Redirecting to home...');
                 router.navigate('/');
@@ -301,18 +305,18 @@ function exportBackupFile() {
             alert('No wallet found to export');
             return;
         }
-        
+
         // Create backup object with the base64 string directly
         const backup = {
             version: '1.0',
             timestamp: new Date().toISOString(),
             encryptedWallet: encryptedData
         };
-        
+
         // Convert to JSON and create blob
         const json = JSON.stringify(backup, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
-        
+
         // Create download link
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -322,7 +326,7 @@ function exportBackupFile() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         console.log('Tuffbackup exported successfully');
         alert('Tuffbackup downloaded!');
     } catch (error) {
@@ -335,38 +339,38 @@ function exportBackupFile() {
 async function importBackupFile(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     try {
         const text = await file.text();
         const backup = JSON.parse(text);
-        
-        // Validate backup format
-        if (!backup.version || !backup.data) {
+
+        // Validate backup format - export saves as { version, timestamp, encryptedWallet }
+        if (!backup.version || !backup.encryptedWallet) {
             alert('Invalid backup file format');
             return;
         }
-        
-        // Confirm overwrite
-        if (localStorage.getItem('dogegage_wallet')) {
+
+        // Confirm overwrite if wallet already exists
+        if (encryptionService.hasStoredWallet()) {
             if (!confirm('This will replace your current wallet. Make sure you have backed it up!\n\nContinue?')) {
                 return;
             }
         }
-        
+
         // Ask for password to verify
         const password = prompt('Enter the password for this backup:');
         if (!password) return;
-        
-        // Try to decrypt to verify password
-        const testData = JSON.parse(backup.data);
-        const decrypted = await encryptionService.decrypt(testData.encryptedData, password, testData.salt);
-        
-        // If successful, save the backup
-        localStorage.setItem('dogegage_wallet', backup.data);
-        
+
+        // Try to decrypt to verify password is correct
+        // encryptedWallet is the base64 string from encryptionService.encrypt()
+        await encryptionService.decrypt(backup.encryptedWallet, password);
+
+        // If decryption successful, save to the correct localStorage key
+        localStorage.setItem('encryptedWallet', backup.encryptedWallet);
+
         alert('Wallet restored successfully! Please refresh the page.');
         location.reload();
-        
+
     } catch (error) {
         console.error('Import error:', error);
         alert('Failed to import backup. Make sure the password is correct.');

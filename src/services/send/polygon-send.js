@@ -1,8 +1,11 @@
 async function sendPolygon(toAddress, amount) {
     try {
-        const mnemonic = await walletService.getMnemonic();
+        const wallet = walletService.getWallet();
+        if (!wallet) throw new Error('Wallet not found');
+
+        const mnemonic = wallet.mnemonic;
         const polygonService = new PolygonService();
-        
+
         const txHash = await polygonService.sendTransaction(mnemonic, toAddress, amount);
         return txHash;
     } catch (error) {

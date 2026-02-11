@@ -436,7 +436,7 @@ function renderDocs() {
                         
                         <div class="docs-help-buttons">
                             <button class="btn-docs-primary" onclick="router.navigate('/support')">Visit Support</button>
-                            <button class="btn-docs-secondary" onclick="if(window.Tawk_API) Tawk_API.toggle()">Live Chat</button>
+                            <button class="btn-docs-secondary" onclick="router.navigate('/support')">Contact Support</button>
                         </div>
                     </section>
                 </main>

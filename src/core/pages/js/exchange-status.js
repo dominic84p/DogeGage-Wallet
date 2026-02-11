@@ -70,7 +70,7 @@ function renderExchangeStatus() {
                         </div>
                         <div class="exchange-detail-row">
                             <span>Transaction</span>
-                            <span class="mono">${statusState.txHash.slice(0, 16)}...${statusState.txHash.slice(-16)}</span>
+                            <span class="mono">${statusState.txHash ? statusState.txHash.slice(0, 16) + '...' + statusState.txHash.slice(-16) : 'Pending...'}</span>
                         </div>
                         <div class="exchange-detail-row">
                             <span>Sending</span>
@@ -131,7 +131,7 @@ function initExchangeStatus(exchangeData, txHash) {
 async function checkExchangeStatus() {
     try {
         const status = await changeNowService.getExchangeStatus(statusState.exchangeId);
-        
+
         if (!status) return;
 
         // Update status based on ChangeNow response
@@ -151,7 +151,7 @@ async function checkExchangeStatus() {
             statusState.status = 'finished';
             statusState.statusMessage = '🎉 Exchange complete!';
             clearInterval(statusState.checkInterval);
-            
+
             // Refresh wallet balance
             await walletService.fetchBalances();
         } else if (status.status === 'failed' || status.status === 'refunded') {
@@ -161,7 +161,7 @@ async function checkExchangeStatus() {
         }
 
         document.getElementById('app').innerHTML = renderExchangeStatus();
-        
+
     } catch (error) {
         console.error('Failed to check exchange status:', error);
     }
@@ -178,14 +178,14 @@ function handleStress() {
         "Your crypto is on its way! 🚀",
         "Patience is a virtue... and profitable 💰"
     ];
-    
+
     const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    
+
     // Create modal with cat image
     const modal = document.createElement('div');
     modal.className = 'cat-modal-overlay';
     modal.onclick = () => modal.remove();
-    
+
     modal.innerHTML = `
         <div class="cat-modal-content" onclick="event.stopPropagation()">
             <button class="cat-modal-close" onclick="this.parentElement.parentElement.remove()">×</button>
@@ -195,13 +195,13 @@ function handleStress() {
             <button class="cat-modal-btn" onclick="this.parentElement.parentElement.remove()">I feel better now</button>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
 
 // Console command to test exchange status screen
-window.testExchangeStatus = function(status = 'confirming') {
+window.testExchangeStatus = function (status = 'confirming') {
     const fakeExchange = {
         id: 'test' + Math.random().toString(36).substr(2, 9),
         fromCurrency: 'btc',
@@ -210,15 +210,15 @@ window.testExchangeStatus = function(status = 'confirming') {
         toAmount: '0.025',
         payoutAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
     };
-    
+
     const fakeTxHash = '5XjpL3DuWKo13vxEqoFEqCoLgpHqEfDm1qfzyn4qvStQHTydcWohUY7SLjJ4T9KqARUHpyD9KyShnsmZxxVMZK7j';
-    
+
     initExchangeStatus(fakeExchange, fakeTxHash);
-    
+
     // Override status if specified
     if (status) {
         statusState.status = status;
-        
+
         const statusMessages = {
             'waiting': 'Waiting for deposit confirmation...',
             'confirming': 'Confirming your transaction on the blockchain...',
@@ -227,18 +227,18 @@ window.testExchangeStatus = function(status = 'confirming') {
             'finished': '🎉 Exchange complete!',
             'failed': 'Exchange failed. Please try again.'
         };
-        
+
         statusState.statusMessage = statusMessages[status] || statusState.statusMessage;
     }
-    
+
     // Stop the interval checking
     if (statusState.checkInterval) {
         clearInterval(statusState.checkInterval);
         statusState.checkInterval = null;
     }
-    
+
     router.navigate('/exchange-status');
-    
+
     console.log('✅ Test exchange status loaded!');
     console.log('Available statuses: waiting, confirming, exchanging, sending, finished, failed');
     console.log('Usage: testExchangeStatus("exchanging")');

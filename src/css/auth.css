@@ -68,7 +68,7 @@
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
-    background: rgba(42, 42, 42, 0.8);
+    background: rgba(15, 17, 26, 0.6);
     backdrop-filter: blur(20px);
     padding: 3rem;
     border-radius: var(--radius-lg);
@@ -215,8 +215,9 @@
     gap: 12px;
     margin: 24px 0;
     padding: 20px;
-    background: #f8f9fa;
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 12px;
+    border: 1px solid var(--border);
 }
 
 .seed-word {
@@ -224,14 +225,14 @@
     align-items: center;
     gap: 8px;
     padding: 12px;
-    background: white;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border);
 }
 
 .seed-number {
     font-size: 12px;
-    color: #888;
+    color: var(--text-muted);
     font-weight: 600;
     min-width: 20px;
 }
@@ -239,7 +240,7 @@
 .seed-text {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: white;
     font-family: 'Courier New', monospace;
 }
 
@@ -247,8 +248,9 @@
     display: flex;
     gap: 12px;
     padding: 16px;
-    background: #fff3cd;
-    border: 1px solid #ffc107;
+    background: rgba(245, 158, 11, 0.1);
+    /* Warning/Amber tint */
+    border: 1px solid rgba(245, 158, 11, 0.3);
     border-radius: 8px;
     margin-bottom: 24px;
 }
@@ -260,12 +262,13 @@
 .warning-text {
     flex: 1;
     font-size: 14px;
-    color: #856404;
+    color: #fbbf24;
 }
 
 .warning-text strong {
     display: block;
     margin-bottom: 4px;
+    color: #f59e0b;
 }
 
 .checkbox-group {
@@ -274,20 +277,22 @@
     gap: 8px;
     margin: 20px 0;
     padding: 16px;
-    background: #f8f9fa;
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
+    border: 1px solid var(--border);
 }
 
 .checkbox-group input[type="checkbox"] {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    accent-color: var(--primary);
 }
 
 .checkbox-group label {
     flex: 1;
     font-size: 14px;
-    color: #333;
+    color: var(--text-secondary);
     cursor: pointer;
     margin: 0;
 }
@@ -297,48 +302,48 @@
     .auth-page {
         padding: 1rem;
     }
-    
+
     .auth-back {
         top: 1rem;
         left: 1rem;
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
     }
-    
+
     .auth-container {
         padding: 2rem 1.5rem;
     }
-    
+
     .auth-welcome {
         font-size: 1.5rem;
     }
-    
+
     .auth-subtitle {
         font-size: 0.9rem;
     }
-    
+
     .seed-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
         padding: 1rem;
     }
-    
+
     .seed-word {
         padding: 0.75rem;
     }
-    
+
     .seed-text {
         font-size: 0.8125rem;
     }
-    
+
     .warning-box {
         padding: 1rem;
     }
-    
+
     .warning-text {
         font-size: 0.8125rem;
     }
-    
+
     .btn-auth-primary,
     .btn-auth-secondary {
         padding: 0.875rem 1.5rem;

@@ -4,9 +4,6 @@ let importedSeedPhrase = '';
 let tuffbackupData = null; // Store TuffBackup file data
 
 function renderImport() {
-    // Hide tawk.to on import page
-    hideTawkTo();
-    
     if (importStep === 1) {
         return renderImportStep1();
     } else {
@@ -134,12 +131,12 @@ function goBackToStep1() {
 
 function handleImportStep1(event) {
     event.preventDefault();
-    
+
     const seedPhrase = document.getElementById('seed-phrase').value.trim();
     const errorEl = document.getElementById('error-message');
-    
+
     errorEl.textContent = '';
-    
+
     // Validate seed phrase
     const { ethers } = window.cryptoLibs;
     try {
@@ -148,7 +145,7 @@ function handleImportStep1(event) {
         errorEl.textContent = 'Invalid seed phrase';
         return;
     }
-    
+
     // Store seed phrase and move to step 2
     importedSeedPhrase = seedPhrase;
     importStep = 2;
@@ -159,18 +156,18 @@ function handleImportStep1(event) {
 function setupAutocomplete(textarea) {
     const hint = document.getElementById('autocomplete-hint');
     let currentSuggestion = '';
-    
+
     // Get wordlist from ethers
     const wordlist = window.cryptoLibs.ethers.wordlists.en;
-    
+
     textarea.addEventListener('input', () => {
         const value = textarea.value;
         const words = value.split(/\s+/);
         const currentWord = words[words.length - 1].toLowerCase();
-        
+
         if (currentWord.length > 0) {
             const matches = [];
-            
+
             // Search through all 2048 BIP39 words
             for (let i = 0; i < 2048; i++) {
                 const word = wordlist.getWord(i);
@@ -179,10 +176,10 @@ function setupAutocomplete(textarea) {
                     if (matches.length >= 5) break;
                 }
             }
-            
+
             if (matches.length > 0) {
                 currentSuggestion = matches[0];
-                
+
                 // Show the full text with the typed part transparent
                 const textBefore = words.slice(0, -1).join(' ') + (words.length > 1 ? ' ' : '');
                 hint.innerHTML = `<span style="opacity: 0;">${textBefore}${currentWord}</span>${currentSuggestion.substring(currentWord.length)}`;
@@ -196,7 +193,7 @@ function setupAutocomplete(textarea) {
             currentSuggestion = '';
         }
     });
-    
+
     textarea.addEventListener('keydown', (e) => {
         if (e.key === 'Tab' && currentSuggestion) {
             e.preventDefault();
@@ -212,44 +209,44 @@ function setupAutocomplete(textarea) {
 
 async function handleImportStep2(event) {
     event.preventDefault();
-    
+
     const password = document.getElementById('import-password').value;
     const passwordConfirm = document.getElementById('import-password-confirm').value;
     const errorEl = document.getElementById('error-message');
     const btn = document.getElementById('import-btn');
-    
+
     errorEl.textContent = '';
-    
+
     // Validate passwords match
     if (password !== passwordConfirm) {
         errorEl.textContent = 'Passwords do not match';
         return;
     }
-    
+
     // Validate password strength
     if (password.length < 8) {
         errorEl.textContent = 'Password must be at least 8 characters';
         return;
     }
-    
+
     btn.disabled = true;
     btn.textContent = 'Importing...';
-    
+
     try {
         console.log('Starting wallet import...');
-        
+
         // Import wallet
         await walletService.importFromSeed(importedSeedPhrase);
         console.log('Wallet imported successfully');
-        
+
         // Encrypt and save to localStorage
         console.log('Encrypting wallet with password...');
         await encryptionService.saveWallet(importedSeedPhrase, password);
         console.log('Wallet encrypted and saved to localStorage');
-        
+
         // Clear the seed phrase from memory
         importedSeedPhrase = '';
-        
+
         // Fetch exchange rates and balances
         console.log('Fetching exchange rates and balances...');
         await Promise.all([
@@ -257,7 +254,7 @@ async function handleImportStep2(event) {
             walletService.fetchBalances()
         ]);
         console.log('All data fetched successfully');
-        
+
         router.navigate('/wallet');
     } catch (error) {
         console.error('Import error:', error);
@@ -313,7 +310,7 @@ function showSeedImport() {
             </div>
         </div>
     `;
-    
+
     const textarea = document.getElementById('seed-phrase');
     if (textarea) {
         setupAutocomplete(textarea);
@@ -323,21 +320,21 @@ function showSeedImport() {
 async function importTuffbackup(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     try {
         const text = await file.text();
         const backup = JSON.parse(text);
-        
+
         // Validate backup format
         if (!backup.version || !backup.encryptedWallet) {
             alert('Invalid Tuffbackup file format');
             return;
         }
-        
+
         // Store backup data and show password input page
         tuffbackupData = backup;
         showTuffbackupPasswordPage();
-        
+
     } catch (error) {
         console.error('Tuffbackup file read error:', error);
         alert('Failed to read Tuffbackup file. Make sure it\'s a valid .dogegage file.');
@@ -396,20 +393,20 @@ function showTuffbackupPasswordPage() {
 
 async function processTuffbackupImport(event) {
     event.preventDefault();
-    
+
     const password = document.getElementById('tuffbackup-password').value;
     if (!password || !tuffbackupData) return;
-    
+
     // Show loading page
     showImportingPage();
-    
+
     try {
         // Small delay to show loading UI
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         // Try to decrypt to verify password and get seed phrase
         const seedPhrase = await encryptionService.decrypt(tuffbackupData.encryptedWallet, password);
-        
+
         // Validate it's a valid seed phrase
         const { ethers } = window.cryptoLibs;
         try {
@@ -419,25 +416,25 @@ async function processTuffbackupImport(event) {
             showTuffbackupPasswordPage();
             return;
         }
-        
+
         // Save the backup to localStorage
         localStorage.setItem('encryptedWallet', tuffbackupData.encryptedWallet);
-        
+
         // Import the wallet
         await walletService.importFromSeed(seedPhrase);
-        
+
         // Fetch balances
         await Promise.all([
             fetchExchangeRates(),
             walletService.fetchBalances()
         ]);
-        
+
         // Clear tuffbackup data
         tuffbackupData = null;
-        
+
         // Navigate to wallet
         router.navigate('/wallet');
-        
+
     } catch (error) {
         console.error('Tuffbackup import error:', error);
         alert('Failed to decrypt backup. Make sure the password is correct.');

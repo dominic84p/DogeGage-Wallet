@@ -38,9 +38,6 @@ let exchangeState = {
 };
 
 function renderExchange() {
-    // Hide tawk.to on exchange page
-    hideTawkTo();
-    
     const wallet = walletService.getWallet();
     if (!wallet) {
         router.navigate('/');
@@ -130,10 +127,10 @@ function renderExchange() {
                         <div class="exchange-section-header">
                             <h3>I want</h3>
                             <div class="exchange-to-address">
-                                ${exchangeState.customAddress ? 
-                                    `<span class="to-label">To:</span> <span class="to-value">${exchangeState.recipientAddress ? exchangeState.recipientAddress.slice(0, 12) + '...' + exchangeState.recipientAddress.slice(-8) : 'Enter address'}</span>` :
-                                    `<span class="to-label">To:</span> <span class="to-value">My Wallet</span>`
-                                }
+                                ${exchangeState.customAddress ?
+            `<span class="to-label">To:</span> <span class="to-value">${exchangeState.recipientAddress ? exchangeState.recipientAddress.slice(0, 12) + '...' + exchangeState.recipientAddress.slice(-8) : 'Enter address'}</span>` :
+            `<span class="to-label">To:</span> <span class="to-value">My Wallet</span>`
+        }
                             </div>
                         </div>
                         <div class="exchange-input-box">
@@ -212,10 +209,10 @@ function renderExchange() {
                             onclick="initiateExchange()" 
                             ${!canExchange() ? 'disabled' : ''}
                         >
-                            ${exchangeState.countdown > 0 ? 
-                                `Cancel (${exchangeState.countdown}s)` : 
-                                (exchangeState.fromAmount ? 'Exchange Now' : 'Enter Amount')
-                            }
+                            ${exchangeState.countdown > 0 ?
+            `Cancel (${exchangeState.countdown}s)` :
+            (exchangeState.fromAmount ? 'Exchange Now' : 'Enter Amount')
+        }
                         </button>
                         
                         <div class="exchange-powered-by">
@@ -255,37 +252,37 @@ async function updateFromAmount(amount) {
     if (amount && !/^\d*\.?\d*$/.test(amount)) {
         return; // Invalid input, ignore
     }
-    
+
     exchangeState.fromAmount = amount;
     exchangeState.error = '';
-    
+
     // Clear previous timeout
     if (estimateTimeout) {
         clearTimeout(estimateTimeout);
     }
-    
+
     // Check minimum amount
     if (amount && parseFloat(amount) > 0) {
         const minAmount = getMinAmount(exchangeState.fromCurrency, exchangeState.toCurrency);
-        
+
         if (parseFloat(amount) < minAmount) {
             exchangeState.error = `Minimum amount is ${minAmount} ${exchangeState.fromCurrency}`;
             exchangeState.toAmount = '';
             updateExchangeUI();
             return;
         }
-        
+
         // Debounce the API call - wait 500ms after user stops typing
         estimateTimeout = setTimeout(async () => {
             exchangeState.estimating = true;
             updateExchangeUI();
-            
+
             // Get estimate from ChangeNow
             const fromCode = changeNowService.getCurrencyCode(exchangeState.fromCurrency);
             const toCode = changeNowService.getCurrencyCode(exchangeState.toCurrency);
-            
+
             const estimate = await changeNowService.getEstimate(fromCode, toCode, amount);
-            
+
             if (estimate && estimate.toAmount) {
                 exchangeState.toAmount = estimate.toAmount;
             } else {
@@ -306,7 +303,7 @@ function updateExchangeUI() {
     const errorEl = document.querySelector('.exchange-error');
     const hintEl = document.querySelector('.exchange-hint');
     const inputEl = document.querySelector('.exchange-input');
-    
+
     if (exchangeState.error) {
         if (inputEl) inputEl.classList.add('error');
         if (!errorEl) {
@@ -325,13 +322,13 @@ function updateExchangeUI() {
         if (inputEl) inputEl.classList.remove('error');
         if (errorEl) errorEl.remove();
     }
-    
+
     // Update "to" amount
     const toInput = document.querySelectorAll('.exchange-input')[1];
     if (toInput) {
         toInput.value = exchangeState.toAmount;
     }
-    
+
     // Update exchange details sidebar
     const infoCard = document.querySelector('.exchange-info-card');
     if (infoCard && exchangeState.toAmount && exchangeState.fromAmount) {
@@ -365,10 +362,10 @@ function updateExchangeUI() {
                 onclick="initiateExchange()" 
                 ${!canExchange() ? 'disabled' : ''}
             >
-                ${exchangeState.countdown > 0 ? 
-                    `Cancel (${exchangeState.countdown}s)` : 
-                    (exchangeState.fromAmount ? 'Exchange Now' : 'Enter Amount')
-                }
+                ${exchangeState.countdown > 0 ?
+                `Cancel (${exchangeState.countdown}s)` :
+                (exchangeState.fromAmount ? 'Exchange Now' : 'Enter Amount')
+            }
             </button>
             <div class="exchange-powered-by">
                 Powered by ChangeNow
@@ -398,9 +395,9 @@ async function updateFromCurrency(currency) {
     exchangeState.fromCurrency = currency;
     exchangeState.minAmount = getMinAmount(currency, exchangeState.toCurrency);
     exchangeState.error = '';
-    
+
     document.getElementById('app').innerHTML = renderExchange();
-    
+
     if (exchangeState.fromAmount) {
         updateFromAmount(exchangeState.fromAmount);
     }
@@ -410,9 +407,9 @@ async function updateToCurrency(currency) {
     exchangeState.toCurrency = currency;
     exchangeState.minAmount = getMinAmount(exchangeState.fromCurrency, currency);
     exchangeState.error = '';
-    
+
     document.getElementById('app').innerHTML = renderExchange();
-    
+
     if (exchangeState.fromAmount) {
         updateFromAmount(exchangeState.fromAmount);
     }
@@ -433,7 +430,7 @@ function toggleCustomAddress(checked) {
         exchangeState.recipientAddress = '';
     }
     document.getElementById('app').innerHTML = renderExchange();
-    
+
     // Re-trigger estimate if amount exists
     if (exchangeState.fromAmount) {
         updateFromAmount(exchangeState.fromAmount);
@@ -448,21 +445,21 @@ function updateRecipientAddress(address) {
 
 function canExchange() {
     if (!exchangeState.fromAmount || exchangeState.estimating || exchangeState.error) return false;
-    
+
     // Check minimum amount
     const minAmount = getMinAmount(exchangeState.fromCurrency, exchangeState.toCurrency);
     if (parseFloat(exchangeState.fromAmount) < minAmount) return false;
-    
+
     // Check if custom address is valid
     if (exchangeState.customAddress) {
         if (!exchangeState.recipientAddress) return false;
         if (!isValidAddress(exchangeState.recipientAddress, exchangeState.toCurrency)) return false;
     }
-    
+
     // Check if user has enough balance
     const wallet = walletService.getWallet();
     if (!wallet) return false;
-    
+
     const fromCrypto = {
         'BTC': wallet.bitcoin,
         'DOGE': wallet.dogecoin,
@@ -473,12 +470,12 @@ function canExchange() {
         'XTZ': wallet.tezos,
         'TRX': wallet.tron
     }[exchangeState.fromCurrency];
-    
+
     const userBalance = parseFloat(fromCrypto.balance);
     const sendAmount = parseFloat(exchangeState.fromAmount);
-    
+
     if (sendAmount > userBalance) return false;
-    
+
     return true;
 }
 
@@ -490,14 +487,14 @@ async function initiateExchange() {
         document.getElementById('app').innerHTML = renderExchange();
         return;
     }
-    
+
     // Start 5 second countdown
     exchangeState.countdown = 5;
     document.getElementById('app').innerHTML = renderExchange();
-    
+
     exchangeState.countdownInterval = setInterval(() => {
         exchangeState.countdown--;
-        
+
         if (exchangeState.countdown <= 0) {
             clearInterval(exchangeState.countdownInterval);
             executeExchange();
@@ -510,7 +507,7 @@ async function initiateExchange() {
 async function executeExchange() {
     const wallet = walletService.getWallet();
     if (!wallet) return;
-    
+
     // Check if user has enough balance
     const fromCrypto = {
         'BTC': wallet.bitcoin,
@@ -522,15 +519,15 @@ async function executeExchange() {
         'XTZ': wallet.tezos,
         'TRX': wallet.tron
     }[exchangeState.fromCurrency];
-    
+
     const userBalance = parseFloat(fromCrypto.balance);
     const sendAmount = parseFloat(exchangeState.fromAmount);
-    
+
     if (sendAmount > userBalance) {
         alert(`Insufficient balance. You have ${userBalance} ${exchangeState.fromCurrency} but trying to send ${sendAmount} ${exchangeState.fromCurrency}`);
         return;
     }
-    
+
     // Get recipient address
     let toAddress;
     if (exchangeState.customAddress) {
@@ -539,7 +536,7 @@ async function executeExchange() {
             alert('Please enter a recipient address');
             return;
         }
-        
+
         // Validate address format
         if (!isValidAddress(toAddress, exchangeState.toCurrency)) {
             alert(`Invalid ${exchangeState.toCurrency} address format`);
@@ -548,18 +545,18 @@ async function executeExchange() {
     } else {
         toAddress = getWalletAddress(exchangeState.toCurrency);
     }
-    
+
     const refundAddress = getWalletAddress(exchangeState.fromCurrency);
-    
+
     if (!toAddress || !refundAddress) {
         alert('Could not get wallet addresses');
         return;
     }
-    
+
     // Create exchange
     const fromCode = changeNowService.getCurrencyCode(exchangeState.fromCurrency);
     const toCode = changeNowService.getCurrencyCode(exchangeState.toCurrency);
-    
+
     console.log('Creating exchange:', {
         from: fromCode,
         to: toCode,
@@ -567,7 +564,7 @@ async function executeExchange() {
         toAddress,
         refundAddress
     });
-    
+
     const exchange = await changeNowService.createExchange(
         fromCode,
         toCode,
@@ -575,9 +572,9 @@ async function executeExchange() {
         toAddress,
         refundAddress
     );
-    
+
     console.log('Exchange response:', exchange);
-    
+
     if (exchange && exchange.id) {
         // Auto-send the crypto to ChangeNow
         await autoSendToExchange(exchange);
@@ -593,20 +590,20 @@ async function autoSendToExchange(exchange) {
         const fromCurrency = exchangeState.fromCurrency;
         const amount = exchangeState.fromAmount; // Use user's input, not API response
         const toAddress = exchange.payinAddress;
-        
+
         // Validate the exchange response matches user's intent
         if (parseFloat(exchange.fromAmount) !== parseFloat(amount)) {
             throw new Error('Exchange amount mismatch. Please try again.');
         }
-        
+
         // Validate payin address format
         if (!isValidAddress(toAddress, fromCurrency)) {
             throw new Error('Invalid payin address from exchange service');
         }
-        
+
         // Send based on currency type
         let txHash;
-        
+
         if (fromCurrency === 'BTC') {
             txHash = await sendBitcoin(toAddress, amount);
         } else if (fromCurrency === 'DOGE') {
@@ -624,27 +621,27 @@ async function autoSendToExchange(exchange) {
         } else if (fromCurrency === 'TRX') {
             txHash = await sendTron(toAddress, amount);
         }
-        
+
         if (txHash) {
             // Initialize status page with exchange data
             initExchangeStatus(exchange, txHash);
-            
+
             // Navigate to status page
             router.navigate('/exchange-status');
         } else {
             alert('Failed to send transaction. Exchange created but not funded.');
         }
-        
+
     } catch (error) {
         console.error('Auto-send failed:', error);
-        
+
         let errorMsg = error.message;
         if (errorMsg.includes('No UTXOs available')) {
             errorMsg = `Your ${exchangeState.fromCurrency.toUpperCase()} wallet is empty or has no confirmed transactions. Please add funds first.`;
         } else if (errorMsg.includes('Insufficient balance')) {
             errorMsg = `Insufficient ${exchangeState.fromCurrency.toUpperCase()} balance.`;
         }
-        
+
         alert(`Failed to send: ${errorMsg}\n\nExchange created but not funded. You can manually send ${exchangeState.fromAmount} ${exchangeState.fromCurrency.toUpperCase()} to:\n${exchange.payinAddress}`);
     }
 }
@@ -661,7 +658,7 @@ function isValidAddress(address, currency) {
         'XTZ': /^tz[1-3][1-9A-HJ-NP-Za-km-z]{33}$/,
         'TRX': /^T[A-Za-z1-9]{33}$/
     };
-    
+
     const regex = validators[currency];
     return regex ? regex.test(address) : true; // If no validator, allow it
 }

@@ -33,6 +33,7 @@ function renderLanding() {
                     <button class="nav-link-btn" onclick="router.navigate('/docs')">Docs</button>
                     <button class="nav-link-btn" onclick="console.log('Support clicked'); router.navigate('/support')">Support</button>
                     <button class="nav-link-btn" onclick="router.navigate('/about')">About</button>
+                    <button class="nav-link-btn" onclick="window.open('https://business.wallet.dogegage.xyz', '_blank')">For Business</button>
                 </div>
                 <div class="landing-nav-buttons">
                     ${isUnlocked ? `

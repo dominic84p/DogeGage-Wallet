@@ -11,49 +11,47 @@ function renderCreate() {
                 <div class="shape shape-3"></div>
             </div>
             
-            <div class="auth-container" style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <h1>Create New Wallet</h1>
-                        <p>Generate a new wallet with a secure seed phrase</p>
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1>Create New Wallet</h1>
+                    <p>Generate a new wallet with a secure seed phrase</p>
+                </div>
+                
+                <div class="auth-form">
+                    <div class="warning-box">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-text">
+                            <strong>Important:</strong> Write down your seed phrase and keep it safe. 
+                            You'll need it to recover your wallet. Never share it with anyone!
+                        </div>
                     </div>
                     
-                    <div class="auth-form">
-                        <div class="warning-box">
-                            <div class="warning-icon">⚠️</div>
-                            <div class="warning-text">
-                                <strong>Important:</strong> Write down your seed phrase and keep it safe. 
-                                You'll need it to recover your wallet. Never share it with anyone!
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Set Password</label>
-                            <input 
-                                type="password" 
-                                id="createPassword" 
-                                placeholder="Enter password"
-                                class="form-input"
-                            >
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Confirm Password</label>
-                            <input 
-                                type="password" 
-                                id="confirmPassword" 
-                                placeholder="Confirm password"
-                                class="form-input"
-                            >
-                        </div>
-                        
-                        <button onclick="generateWallet()" class="btn-primary btn-full">
-                            Generate Wallet
-                        </button>
-                        
-                        <div class="auth-footer">
-                            Already have a wallet? <a href="#/import">Import Wallet</a>
-                        </div>
+                    <div class="form-group">
+                        <label>Set Password</label>
+                        <input 
+                            type="password" 
+                            id="createPassword" 
+                            placeholder="Enter password"
+                            class="form-input"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            placeholder="Confirm password"
+                            class="form-input"
+                        >
+                    </div>
+                    
+                    <button onclick="generateWallet()" class="btn-primary btn-full">
+                        Generate Wallet
+                    </button>
+                    
+                    <div class="auth-footer">
+                        Already have a wallet? <a href="#/import">Import Wallet</a>
                     </div>
                 </div>
             </div>
@@ -73,46 +71,44 @@ function renderSeedPhrase(mnemonic) {
                 <div class="shape shape-3"></div>
             </div>
             
-            <div class="auth-container" style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <h1>Your Seed Phrase</h1>
-                        <p>Write this down and keep it safe!</p>
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1>Your Seed Phrase</h1>
+                    <p>Write this down and keep it safe!</p>
+                </div>
+                
+                <div class="auth-form">
+                    <div class="warning-box">
+                        <div class="warning-icon">🔒</div>
+                        <div class="warning-text">
+                            <strong>Never share your seed phrase!</strong><br>
+                            Anyone with this phrase can access your funds.
+                        </div>
                     </div>
                     
-                    <div class="auth-form">
-                        <div class="warning-box">
-                            <div class="warning-icon">🔒</div>
-                            <div class="warning-text">
-                                <strong>Never share your seed phrase!</strong><br>
-                                Anyone with this phrase can access your funds.
+                    <div class="seed-grid">
+                        ${words.map((word, i) => `
+                            <div class="seed-word">
+                                <span class="seed-number">${i + 1}</span>
+                                <span class="seed-text">${word}</span>
                             </div>
-                        </div>
-                        
-                        <div class="seed-grid">
-                            ${words.map((word, i) => `
-                                <div class="seed-word">
-                                    <span class="seed-number">${i + 1}</span>
-                                    <span class="seed-text">${word}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        
-                        <button onclick="copySeedPhrase()" class="btn-outline btn-full">
-                            📋 Copy to Clipboard
-                        </button>
-                        
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="savedCheckbox">
-                            <label for="savedCheckbox">
-                                I have written down my seed phrase in a safe place
-                            </label>
-                        </div>
-                        
-                        <button onclick="confirmSeedPhrase()" class="btn-primary btn-full" id="nextButton">
-                            Next
-                        </button>
+                        `).join('')}
                     </div>
+                    
+                    <button onclick="copySeedPhrase()" class="btn-outline btn-full">
+                        📋 Copy to Clipboard
+                    </button>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="savedCheckbox">
+                        <label for="savedCheckbox">
+                            I have written down my seed phrase in a safe place
+                        </label>
+                    </div>
+                    
+                    <button onclick="confirmSeedPhrase()" class="btn-primary btn-full" id="nextButton">
+                        Next
+                    </button>
                 </div>
             </div>
         </div>
@@ -156,7 +152,7 @@ async function generateWallet() {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Store encrypted data for backup
-        encryptedWalletData = localStorage.getItem('dogegage_wallet');
+        encryptedWalletData = localStorage.getItem('encryptedWallet');
 
         // Show seed phrase
         document.getElementById('app').innerHTML = renderSeedPhrase(mnemonic);

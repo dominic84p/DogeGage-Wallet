@@ -89,6 +89,8 @@ async function handleUnlock(event) {
 function handleForgetWallet() {
     if (confirm('Are you sure you want to forget this wallet?\n\nMake sure you have your seed phrase backed up!\n\nThis action cannot be undone.')) {
         encryptionService.clearWallet();
+        localStorage.removeItem('cachedBalances');
+        sessionStorage.clear();
         router.navigate('/');
     }
 }

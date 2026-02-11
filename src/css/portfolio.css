@@ -16,7 +16,7 @@
     .portfolio-layout {
         grid-template-columns: 1fr;
     }
-    
+
     .portfolio-right .portfolio-chart-card {
         min-width: 100%;
     }
@@ -32,80 +32,80 @@
         padding: 1rem;
         padding-bottom: 5rem;
     }
-    
+
     .portfolio-header h2 {
         font-size: 1.5rem;
     }
-    
+
     .portfolio-chart-card {
         padding: 1rem;
     }
-    
+
     .portfolio-total-amount {
         font-size: 1.25rem;
     }
-    
+
     .asset-item {
         padding: 0.875rem 1rem;
         font-size: 0.875rem;
     }
-    
+
     .asset-name {
         font-size: 0.875rem;
     }
-    
+
     .chart-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
         margin-bottom: 1rem;
     }
-    
+
     .chart-header h3 {
         font-size: 1rem;
     }
-    
+
     .chart-timeframe {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     .timeframe-btn {
         flex-shrink: 0;
         padding: 0.4rem 0.75rem;
         font-size: 0.75rem;
     }
-    
+
     /* Donut chart sizing */
     #portfolioDonut {
         max-width: 280px !important;
         max-height: 280px !important;
         margin: 0 auto;
     }
-    
+
     /* Line chart sizing */
     #portfolioLineChart {
         height: 250px !important;
     }
-    
+
     .chart-note {
         font-size: 0.75rem;
         margin-top: 0.75rem;
     }
-    
+
     .portfolio-total-center {
         font-size: 0.875rem;
     }
-    
+
     .portfolio-total-label {
         font-size: 0.75rem;
     }
-    
+
     .portfolio-total-amount {
         font-size: 1.1rem;
     }
-    
+
     /* Mobile bottom nav */
     .mobile-bottom-nav {
         display: flex;
@@ -119,7 +119,7 @@
         z-index: 100;
         justify-content: space-around;
     }
-    
+
     .mobile-nav-btn {
         display: flex;
         flex-direction: column;
@@ -134,11 +134,11 @@
         transition: all 0.2s;
         text-decoration: none;
     }
-    
+
     .mobile-nav-btn.active {
         color: var(--primary);
     }
-    
+
     .mobile-nav-btn span:first-child {
         font-size: 1.25rem;
     }
@@ -151,11 +151,13 @@
 }
 
 .portfolio-chart-card {
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 16px;
+    background: rgba(15, 17, 26, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     padding: 2rem;
     position: relative;
+    box-shadow: var(--shadow-md);
 }
 
 .portfolio-total-center {
@@ -190,15 +192,16 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .asset-item:hover {
-    background: #333;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
     transform: translateX(4px);
 }
 
@@ -300,7 +303,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .loading-quote {
