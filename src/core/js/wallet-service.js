@@ -281,6 +281,11 @@ class WalletService {
                     const dogePrice = getPrice('dogecoin', 0.35);
                     this.wallet.dogecoin.balance = dogeBalance;
                     this.wallet.dogecoin.balanceUSD = (parseFloat(dogeBalance) * dogePrice).toFixed(2);
+                    try {
+                        this.wallet.dogecoin.transactions = await this.dogecoinService.getTransactions(this.wallet.dogecoin.address);
+                    } catch (txErr) {
+                        console.warn('DOGE transactions fetch failed:', txErr.message);
+                    }
                     console.log('DOGE Balance:', dogeBalance, 'USD:', this.wallet.dogecoin.balanceUSD);
                     updateUI();
                 }, 'DOGE');
@@ -297,6 +302,11 @@ class WalletService {
                     const ltcPrice = getPrice('litecoin', 100);
                     this.wallet.litecoin.balance = ltcBalance;
                     this.wallet.litecoin.balanceUSD = (parseFloat(ltcBalance) * ltcPrice).toFixed(2);
+                    try {
+                        this.wallet.litecoin.transactions = await this.litecoinService.getTransactions(this.wallet.litecoin.address);
+                    } catch (txErr) {
+                        console.warn('LTC transactions fetch failed:', txErr.message);
+                    }
                     console.log('LTC Balance:', ltcBalance, 'USD:', this.wallet.litecoin.balanceUSD);
                     updateUI();
                 }, 'LTC');
@@ -313,6 +323,11 @@ class WalletService {
                     const xtzPrice = getPrice('tezos', 1);
                     this.wallet.tezos.balance = xtzBalance;
                     this.wallet.tezos.balanceUSD = (parseFloat(xtzBalance) * xtzPrice).toFixed(2);
+                    try {
+                        this.wallet.tezos.transactions = await this.tezosService.getTransactions(this.wallet.tezos.address);
+                    } catch (txErr) {
+                        console.warn('XTZ transactions fetch failed:', txErr.message);
+                    }
                     console.log('XTZ Balance:', xtzBalance, 'USD:', this.wallet.tezos.balanceUSD);
                     updateUI();
                 }, 'XTZ');
@@ -329,6 +344,11 @@ class WalletService {
                     const trxPrice = getPrice('tron', 0.25);
                     this.wallet.tron.balance = trxBalance;
                     this.wallet.tron.balanceUSD = (parseFloat(trxBalance) * trxPrice).toFixed(2);
+                    try {
+                        this.wallet.tron.transactions = await this.tronService.getTransactions(this.wallet.tron.address);
+                    } catch (txErr) {
+                        console.warn('TRX transactions fetch failed:', txErr.message);
+                    }
                     console.log('TRX Balance:', trxBalance, 'USD:', this.wallet.tron.balanceUSD);
                     updateUI();
                 }, 'TRX');
@@ -382,11 +402,17 @@ class WalletService {
                     const polBalance = parseFloat(polBalanceRaw).toFixed(8);
                     const polPrice = getPrice('matic-network', 0.5);
                     const polBalanceUSD = (parseFloat(polBalance) * polPrice).toFixed(2);
+                    let polTransactions = [];
+                    try {
+                        polTransactions = await this.polygonService.getTransactions(this.wallet.ethereum.address);
+                    } catch (txErr) {
+                        console.warn('POL transactions fetch failed:', txErr.message);
+                    }
                     this.wallet.polygon = {
                         address: this.wallet.ethereum.address,
                         balance: polBalance,
                         balanceUSD: polBalanceUSD,
-                        transactions: []
+                        transactions: polTransactions
                     };
                     console.log('POL Balance:', polBalance, 'USD:', polBalanceUSD);
                     updateUI();

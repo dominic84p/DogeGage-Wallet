@@ -82,7 +82,7 @@ async function handleUnlock(event) {
             ? 'Incorrect password'
             : error.message;
         btn.disabled = false;
-        btn.innerHTML = 'Unlock Wallet →';
+        btn.textContent = 'Unlock Wallet →';
     }
 }
 

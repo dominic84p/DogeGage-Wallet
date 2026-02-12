@@ -19,7 +19,7 @@ function renderSettingsContent() {
                     </div>
                 </div>
                 <div class="nav-right">
-                    <button class="nav-icon-btn" onclick="router.navigate('/wallet')">⚙️</button>
+                    <button class="nav-icon-btn" onclick="router.navigate('/wallet')">←</button>
                 </div>
             </nav>
             
@@ -34,7 +34,7 @@ function renderSettingsContent() {
                         <span>Security</span>
                     </div>
                     <div class="settings-sidebar-item ${activeSettingsTab === 'backup' ? 'active' : ''}" onclick="switchSettingsTab('backup')">
-                        <span>🌱</span>
+                        <span>💾</span>
                         <span>Backup & Recovery</span>
                     </div>
                     <div class="settings-sidebar-item ${activeSettingsTab === 'danger' ? 'active' : ''}" onclick="switchSettingsTab('danger')">
@@ -94,27 +94,27 @@ function renderSettingsTab() {
 function renderGeneralSettings() {
     return `
         <div class="settings-section">
-            <h2>⚙️ General Settings</h2>
-            <p class="settings-description">Manage your wallet preferences</p>
+            <h2>General</h2>
+            <p class="settings-description">Customize your wallet experience</p>
             
             <div class="settings-card">
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Default Currency</strong>
-                        <span>Choose your preferred display currency</span>
+                        <strong>Display Currency</strong>
+                        <span>Set your preferred fiat currency for portfolio values</span>
                     </div>
                     <div class="settings-item-actions">
-                        <select class="currency-selector" onchange="changeCurrency(this.value)">
-                            <option value="usd">USD ($)</option>
-                            <option value="eur">EUR (€)</option>
-                            <option value="gbp">GBP (£)</option>
-                            <option value="jpy">JPY (¥)</option>
-                            <option value="cad">CAD ($)</option>
-                            <option value="aud">AUD ($)</option>
-                            <option value="chf">CHF (Fr)</option>
-                            <option value="cny">CNY (¥)</option>
-                            <option value="inr">INR (₹)</option>
-                            <option value="krw">KRW (₩)</option>
+                        <select class="settings-select" onchange="changeCurrency(this.value)">
+                            <option value="usd" ${selectedCurrency === 'usd' ? 'selected' : ''}>USD ($)</option>
+                            <option value="eur" ${selectedCurrency === 'eur' ? 'selected' : ''}>EUR (€)</option>
+                            <option value="gbp" ${selectedCurrency === 'gbp' ? 'selected' : ''}>GBP (£)</option>
+                            <option value="jpy" ${selectedCurrency === 'jpy' ? 'selected' : ''}>JPY (¥)</option>
+                            <option value="cad" ${selectedCurrency === 'cad' ? 'selected' : ''}>CAD ($)</option>
+                            <option value="aud" ${selectedCurrency === 'aud' ? 'selected' : ''}>AUD ($)</option>
+                            <option value="chf" ${selectedCurrency === 'chf' ? 'selected' : ''}>CHF (Fr)</option>
+                            <option value="cny" ${selectedCurrency === 'cny' ? 'selected' : ''}>CNY (¥)</option>
+                            <option value="inr" ${selectedCurrency === 'inr' ? 'selected' : ''}>INR (₹)</option>
+                            <option value="krw" ${selectedCurrency === 'krw' ? 'selected' : ''}>KRW (₩)</option>
                         </select>
                     </div>
                 </div>
@@ -129,14 +129,14 @@ function renderSecuritySettings() {
 
     return `
         <div class="settings-section">
-            <h2>🔐 Security</h2>
-            <p class="settings-description">Manage your wallet security</p>
+            <h2>Security</h2>
+            <p class="settings-description">Protect your wallet with auto-lock and password settings</p>
             
             <div class="settings-card">
                 <div class="settings-item">
                     <div class="settings-item-info">
                         <strong>Auto-Lock</strong>
-                        <span>Automatically lock wallet after inactivity</span>
+                        <span>Automatically lock your wallet after a period of inactivity</span>
                     </div>
                     <div class="settings-item-actions">
                         <label class="toggle-switch">
@@ -149,8 +149,8 @@ function renderSecuritySettings() {
                 ${isEnabled ? `
                     <div class="settings-item">
                         <div class="settings-item-info">
-                            <strong>Auto-Lock Timer</strong>
-                            <span>Lock wallet after this period of inactivity</span>
+                            <strong>Lock Timer</strong>
+                            <span>How long before the wallet locks itself</span>
                         </div>
                         <div class="settings-item-actions">
                             <select class="settings-select" onchange="updateAutoLockDelay(this.value)">
@@ -168,7 +168,7 @@ function renderSecuritySettings() {
                 <div class="settings-item">
                     <div class="settings-item-info">
                         <strong>Change Password</strong>
-                        <span>Update your wallet password</span>
+                        <span>Update the password used to unlock your wallet</span>
                     </div>
                     <div class="settings-item-actions">
                         <button class="btn-secondary" onclick="changePassword()">Change</button>
@@ -192,27 +192,27 @@ function updateAutoLockDelay(minutes) {
 function renderBackupSettings() {
     return `
         <div class="settings-section">
-            <h2>🌱 Backup & Recovery</h2>
-            <p class="settings-description">Your recovery phrase - keep it safe!</p>
+            <h2>Backup & Recovery</h2>
+            <p class="settings-description">Keep your wallet safe with encrypted backups and seed phrase access</p>
             
             <div class="settings-card">
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Export Backup File</strong>
-                        <span>Download encrypted wallet backup (.dogegage file)</span>
+                        <strong>Export Tuffbackup</strong>
+                        <span>Download an encrypted .dogegage backup file — protected by your password</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-primary" onclick="exportBackupFile()">Export Backup</button>
+                        <button class="btn-primary" onclick="exportBackupFile()">Export</button>
                     </div>
                 </div>
                 
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Import Backup File</strong>
-                        <span>Restore wallet from .dogegage backup file</span>
+                        <strong>Import Tuffbackup</strong>
+                        <span>Restore your wallet from a previously exported .dogegage file</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-secondary" onclick="document.getElementById('backupFileInput').click()">Import Backup</button>
+                        <button class="btn-secondary" onclick="document.getElementById('backupFileInput').click()">Import</button>
                         <input type="file" id="backupFileInput" accept=".dogegage" style="display: none;" onchange="importBackupFile(event)">
                     </div>
                 </div>
@@ -220,10 +220,10 @@ function renderBackupSettings() {
                 <div class="settings-item">
                     <div class="settings-item-info">
                         <strong>View Seed Phrase</strong>
-                        <span>Display your 12-word recovery phrase</span>
+                        <span>Reveal your 12-word recovery phrase — never share this with anyone</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-primary" onclick="viewSeedPhrase()">View</button>
+                        <button class="btn-secondary" onclick="viewSeedPhrase()">Reveal</button>
                     </div>
                 </div>
             </div>
@@ -234,17 +234,17 @@ function renderBackupSettings() {
 function renderDangerSettings() {
     return `
         <div class="settings-section">
-            <h2>⚠️ Danger Zone</h2>
-            <p class="settings-description">Irreversible actions</p>
+            <h2>Danger Zone</h2>
+            <p class="settings-description">These actions are permanent and cannot be undone</p>
             
             <div class="settings-card">
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Clear Wallet Data</strong>
-                        <span>Delete all wallet data from this device</span>
+                        <strong>Forget Wallet</strong>
+                        <span>Permanently delete all wallet data from this device. Make sure you have a backup first.</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-danger" onclick="clearWalletData()">Clear Data</button>
+                        <button class="btn-danger" onclick="clearWalletData()">Forget Wallet</button>
                     </div>
                 </div>
             </div>

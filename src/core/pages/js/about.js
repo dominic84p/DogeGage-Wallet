@@ -24,11 +24,11 @@ function renderAbout() {
             <div class="about-hero-banner">
                 <div class="about-hero-content">
                     <h1>About Us</h1>
-                    <p>DogeGage Wallet is a non-custodial cryptocurrency wallet that actually works. We support 8 major cryptocurrencies with 100% functional features including BTC, ETH, SOL, DOGE, LTC, XTZ, TRX, POL, and our native DGAGE token.</p>
+                    <p>DogeGage Wallet is a non-custodial cryptocurrency wallet that actually works. We support 9 major cryptocurrencies with 100% functional features including BTC, ETH, SOL, DOGE, LTC, XTZ, TRX, POL, and our native DGAGE token.</p>
                     
                     <div class="about-stats">
                         <div class="stat-item">
-                            <div class="stat-number">8</div>
+                            <div class="stat-number">9</div>
                             <div class="stat-label">CRYPTOCURRENCIES<br>SUPPORTED</div>
                         </div>
                         <div class="stat-item">
@@ -48,7 +48,7 @@ function renderAbout() {
                     <section class="about-section">
                         <h2>Our Mission</h2>
                         <p>We built DogeGage because we were tired of crypto wallets that promise everything and deliver nothing. You know the type - they claim to support 40+ cryptocurrencies, but half the features don't work. Transactions fail. Balances don't update. The UI is confusing. And good luck getting support.</p>
-                        <p>DogeGage is different. We support 8 cryptocurrencies, and every single feature works. Send, receive, exchange, backup - all tested, all functional. We'd rather do 8 cryptos perfectly than 40 poorly.</p>
+                        <p>DogeGage is different. We support 9 cryptocurrencies, and every single feature works. Send, receive, exchange, backup - all tested, all functional. We'd rather do 9 cryptos perfectly than 40 poorly.</p>
                     </section>
                     
                     <section class="about-section">
@@ -160,7 +160,7 @@ function renderAbout() {
                                 <span class="not-icon">❌</span>
                                 <div>
                                     <strong>Not promising 40+ coins</strong>
-                                    <p>We support 8 cryptos with 100% working features. Quality over quantity.</p>
+                                    <p>We support 9 cryptos with 100% working features. Quality over quantity.</p>
                                 </div>
                             </div>
                         </div>

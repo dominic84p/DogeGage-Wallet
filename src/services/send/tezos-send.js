@@ -4,38 +4,39 @@ class TezosSendService {
         this.rpcUrl = 'https://mainnet.api.tez.ie';
     }
 
-    // Derive address from private key - try multiple methods
+    // Extract 32-byte seed from decoded private key bytes
+    _extractSeed(decoded) {
+        if (decoded.length < 36) {
+            throw new Error('Decoded key too short: ' + decoded.length + ' bytes');
+        }
+
+        let seed;
+        if (decoded.length >= 40) {
+            seed = decoded.slice(4, 36);
+        } else {
+            seed = decoded.slice(4, Math.min(36, decoded.length));
+            if (seed.length < 32) {
+                const padded = new Uint8Array(32);
+                padded.set(seed, 32 - seed.length);
+                seed = padded;
+            }
+        }
+        return seed;
+    }
+
+    // Derive tz1 address from public key
+    _addressFromPublicKey(publicKey) {
+        const pkHash = window.blake2b(publicKey, null, 20);
+        return this.encodeAddress(pkHash);
+    }
+
+    // Derive address from private key
     deriveAddressFromPrivateKey(edskKey) {
         try {
-            // Decode the edsk private key
             const decoded = this.base58Decode(edskKey);
-
-            if (decoded.length < 36) {
-                throw new Error('Decoded key too short: ' + decoded.length + ' bytes');
-            }
-
-            // Extract seed
-            let seed;
-            if (decoded.length === 40) {
-                seed = decoded.slice(4, 36);
-            } else if (decoded.length > 40) {
-                seed = decoded.slice(4, 36);
-            } else {
-                seed = decoded.slice(4, Math.min(36, decoded.length));
-                if (seed.length < 32) {
-                    const padded = new Uint8Array(32);
-                    padded.set(seed, 32 - seed.length);
-                    seed = padded;
-                }
-            }
-
-            // Standard Ed25519
+            const seed = this._extractSeed(decoded);
             const keypair = nacl.sign.keyPair.fromSeed(seed);
-            const pkHash = window.blake2b(keypair.publicKey, null, 20);
-            const address = this.encodeAddress(pkHash);
-
-            return address;
-
+            return this._addressFromPublicKey(keypair.publicKey);
         } catch (error) {
             console.error('Error deriving address:', error);
             throw new Error('Invalid private key: ' + error.message);
@@ -61,28 +62,11 @@ class TezosSendService {
         try {
             console.log('Sending Tezos transaction...');
 
-            // Decode private key
+            // Decode private key and derive keypair + address once
             const decoded = this.base58Decode(privateKey);
-
-            // Extract seed (same logic as deriveAddressFromPrivateKey)
-            let seed;
-            if (decoded.length === 40) {
-                seed = decoded.slice(4, 36);
-            } else if (decoded.length > 40) {
-                seed = decoded.slice(4, 36);
-            } else {
-                seed = decoded.slice(4, Math.min(36, decoded.length));
-                if (seed.length < 32) {
-                    const padded = new Uint8Array(32);
-                    padded.set(seed, 32 - seed.length);
-                    seed = padded;
-                }
-            }
-
+            const seed = this._extractSeed(decoded);
             const keypair = nacl.sign.keyPair.fromSeed(seed);
-
-            // Get source address
-            const fromAddress = this.deriveAddressFromPrivateKey(privateKey);
+            const fromAddress = this._addressFromPublicKey(keypair.publicKey);
 
             // Get blockchain data
             const blockHash = await this.getBlockHash();

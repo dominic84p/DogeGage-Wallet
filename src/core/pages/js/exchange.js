@@ -91,8 +91,8 @@ function renderExchange() {
                 <div class="exchange-main">
                     <div class="exchange-section">
                         <div class="exchange-section-header">
-                            <h3>I have</h3>
-                            <span class="exchange-balance-text">Balance: ${fromCrypto.balance} ${exchangeState.fromCurrency}</span>
+                            <h3>You Send</h3>
+                            <span class="exchange-balance-text">${fromCrypto.balance} ${exchangeState.fromCurrency} available</span>
                         </div>
                         <div class="exchange-input-box">
                             <input 
@@ -106,7 +106,7 @@ function renderExchange() {
                             <select class="exchange-select" onchange="updateFromCurrency(this.value)">
                                 ${currencies.map(c => `
                                     <option value="${c.symbol}" ${exchangeState.fromCurrency === c.symbol ? 'selected' : ''}>
-                                        ${c.symbol} - ${c.name}
+                                        ${c.symbol} — ${c.name}
                                     </option>
                                 `).join('')}
                             </select>
@@ -125,7 +125,7 @@ function renderExchange() {
 
                     <div class="exchange-section">
                         <div class="exchange-section-header">
-                            <h3>I want</h3>
+                            <h3>You Receive</h3>
                             <div class="exchange-to-address">
                                 ${exchangeState.customAddress ?
             `<span class="to-label">To:</span> <span class="to-value">${exchangeState.recipientAddress ? exchangeState.recipientAddress.slice(0, 12) + '...' + exchangeState.recipientAddress.slice(-8) : 'Enter address'}</span>` :
@@ -144,7 +144,7 @@ function renderExchange() {
                             <select class="exchange-select" onchange="updateToCurrency(this.value)">
                                 ${currencies.map(c => `
                                     <option value="${c.symbol}" ${exchangeState.toCurrency === c.symbol ? 'selected' : ''}>
-                                        ${c.symbol} - ${c.name}
+                                        ${c.symbol} — ${c.name}
                                     </option>
                                 `).join('')}
                             </select>
@@ -153,7 +153,7 @@ function renderExchange() {
                         <div class="exchange-address-toggle">
                             <label class="exchange-checkbox">
                                 <input type="checkbox" ${exchangeState.customAddress ? 'checked' : ''} onchange="toggleCustomAddress(this.checked)">
-                                <span>Send to different wallet</span>
+                                <span>Send to a different address</span>
                             </label>
                         </div>
                         
@@ -162,7 +162,7 @@ function renderExchange() {
                                 <input 
                                     type="text" 
                                     class="exchange-address-input" 
-                                    placeholder="Enter ${exchangeState.toCurrency} address"
+                                    placeholder="Paste ${exchangeState.toCurrency} address"
                                     value="${exchangeState.recipientAddress}"
                                     oninput="updateRecipientAddress(this.value)"
                                 />
