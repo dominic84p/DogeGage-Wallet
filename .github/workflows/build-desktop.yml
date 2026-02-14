@@ -96,14 +96,22 @@ jobs:
         working-directory: desktop-app
         run: bun install
 
+      - name: Build frontend
+        working-directory: desktop-app
+        run: bun run build
+
       - name: Initialize iOS project
         working-directory: desktop-app
         run: bun run tauri ios init
 
-      - name: Build iOS app (unsigned)
-        working-directory: desktop-app
+      - name: Build Rust library for iOS
+        working-directory: desktop-app/src-tauri
         run: |
-          cd src-tauri/gen/apple
+          cargo build --release --target aarch64-apple-ios --lib
+
+      - name: Build iOS app (unsigned)
+        working-directory: desktop-app/src-tauri/gen/apple
+        run: |
           xcodebuild -project desktop-app.xcodeproj \
             -scheme desktop-app_iOS \
             -configuration Release \
@@ -111,7 +119,8 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            -derivedDataPath ./build
+            -derivedDataPath ./build \
+            ONLY_ACTIVE_ARCH=NO
 
       - name: Create IPA from .app
         working-directory: desktop-app/src-tauri/gen/apple
