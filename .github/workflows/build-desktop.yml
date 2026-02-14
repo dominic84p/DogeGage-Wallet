@@ -101,7 +101,7 @@ jobs:
       - name: Build iOS app with Tauri (will fail on signing but create .app)
         working-directory: desktop-app
         continue-on-error: true
-        run: bun run tauri ios build --release
+        run: bun run tauri ios build
 
       - name: Find and package .app into IPA
         working-directory: desktop-app
