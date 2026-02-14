@@ -29,11 +29,11 @@ function renderLanding() {
                     <span class="beta-badge">BETA</span>
                 </div>
                 <div class="landing-nav-links">
-                    <button class="nav-link-btn" onclick="console.log('News clicked'); router.navigate('/news')">News</button>
+                    <button class="nav-link-btn" onclick="router.navigate('/news')">News</button>
                     <button class="nav-link-btn" onclick="router.navigate('/docs')">Docs</button>
                     <button class="nav-link-btn" onclick="console.log('Support clicked'); router.navigate('/support')">Support</button>
                     <button class="nav-link-btn" onclick="router.navigate('/about')">About</button>
-                    <button class="nav-link-btn" onclick="window.open('https://business.wallet.dogegage.xyz', '_blank')">For Business</button>
+                    <button class="nav-link-btn" onclick="router.navigate('/downloads')">Downloads</button>
                 </div>
                 <div class="landing-nav-buttons">
                     ${isUnlocked ? `
