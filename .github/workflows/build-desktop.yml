@@ -76,64 +76,8 @@ jobs:
     runs-on: macos-latest
     
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install iOS targets
+      - name: iOS builds disabled
         run: |
-          rustup target add aarch64-apple-ios
-
-      - name: Install frontend dependencies
-        working-directory: desktop-app
-        run: bun install
-
-      - name: Initialize iOS project
-        working-directory: desktop-app
-        run: bun run tauri ios init
-
-      - name: Build iOS app with Tauri (will fail on signing but create .app)
-        working-directory: desktop-app
-        continue-on-error: true
-        run: bun run tauri ios build
-
-      - name: Find and package .app into IPA
-        working-directory: desktop-app
-        run: |
-          # Find the .app bundle
-          APP_PATH=$(find src-tauri/gen/apple -name "*.app" -type d | head -n 1)
-          if [ -z "$APP_PATH" ]; then
-            echo "No .app found, trying target directory"
-            APP_PATH=$(find src-tauri/target -name "*.app" -type d | head -n 1)
-          fi
-          
-          if [ -n "$APP_PATH" ]; then
-            echo "Found app at: $APP_PATH"
-            mkdir -p Payload
-            cp -r "$APP_PATH" Payload/
-            zip -r DogeGage-Wallet-unsigned.ipa Payload
-            rm -rf Payload
-          else
-            echo "ERROR: No .app bundle found"
-            exit 1
-          fi
-
-      - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa-unsigned
-          path: desktop-app/DogeGage-Wallet-unsigned.ipa
-
-      - name: Create Release (iOS)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: desktop-app/DogeGage-Wallet-unsigned.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "iOS builds require signing with an Apple Developer account"
+          echo "See desktop-app/IOS-BUILD.md for local build instructions"
+          exit 0
