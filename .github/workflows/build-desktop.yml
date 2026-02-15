@@ -39,6 +39,8 @@ jobs:
       - name: Build Tauri app
         working-directory: desktop-app
         run: bun run tauri build
+        env:
+          APPLE_SIGNING_IDENTITY: "-"
 
       - name: Upload artifacts (macOS)
         if: matrix.platform == 'macos-latest'
