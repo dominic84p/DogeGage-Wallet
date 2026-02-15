@@ -2,7 +2,8 @@
 let activeSettingsTab = 'general';
 
 function renderSettings() {
-    return renderSettingsContent();
+    const html = renderSettingsContent();
+    return html;
 }
 
 function renderSettingsContent() {
@@ -130,12 +131,18 @@ function renderSecuritySettings() {
     return `
         <div class="settings-section">
             <h2>Security</h2>
-            <p class="settings-description">Protect your wallet with auto-lock and password settings</p>
+            <p class="settings-description">Protect your wallet with advanced security features</p>
             
+            <!-- Auto-Lock Section -->
             <div class="settings-card">
+                <h3 style="font-size: 18px; color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>🔒</span>
+                    <span>Auto-Lock</span>
+                </h3>
+                
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Auto-Lock</strong>
+                        <strong>Enable Auto-Lock</strong>
                         <span>Automatically lock your wallet after a period of inactivity</span>
                     </div>
                     <div class="settings-item-actions">
@@ -164,6 +171,14 @@ function renderSecuritySettings() {
                         </div>
                     </div>
                 ` : ''}
+            </div>
+            
+            <!-- Password Management Section -->
+            <div class="settings-card" style="margin-top: 24px;">
+                <h3 style="font-size: 18px; color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>🔑</span>
+                    <span>Password Management</span>
+                </h3>
                 
                 <div class="settings-item">
                     <div class="settings-item-info">
@@ -171,7 +186,7 @@ function renderSecuritySettings() {
                         <span>Update the password used to unlock your wallet</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-secondary" onclick="changePassword()">Change</button>
+                        <button class="btn-secondary" onclick="changePassword()">Change Password</button>
                     </div>
                 </div>
             </div>

@@ -126,16 +126,24 @@ function renderGeneralSettings() {
 function renderSecuritySettings() {
     const currentDelay = autoLockService.getDelay();
     const isEnabled = autoLockService.isEnabled();
+    const hasPasskey = passkeyService.isSupported() && passkeyService.hasPasskey();
+    const passkeySupported = passkeyService.isSupported();
 
     return `
         <div class="settings-section">
             <h2>Security</h2>
-            <p class="settings-description">Protect your wallet with auto-lock and password settings</p>
+            <p class="settings-description">Protect your wallet with advanced security features</p>
             
+            <!-- Auto-Lock Section -->
             <div class="settings-card">
+                <h3 style="font-size: 18px; color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>🔒</span>
+                    <span>Auto-Lock</span>
+                </h3>
+                
                 <div class="settings-item">
                     <div class="settings-item-info">
-                        <strong>Auto-Lock</strong>
+                        <strong>Enable Auto-Lock</strong>
                         <span>Automatically lock your wallet after a period of inactivity</span>
                     </div>
                     <div class="settings-item-actions">
@@ -164,6 +172,72 @@ function renderSecuritySettings() {
                         </div>
                     </div>
                 ` : ''}
+            </div>
+            
+            <!-- 2FA / Authentication Section -->
+            <div class="settings-card" style="margin-top: 24px;">
+                <h3 style="font-size: 18px; color: white; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <span>🛡️</span>
+                    <span>Two-Factor Authentication</span>
+                </h3>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Add an extra layer of security to your wallet</p>
+                
+                ${passkeySupported ? `
+                    <div class="settings-item" style="border: 1px solid ${hasPasskey ? 'rgba(102, 126, 234, 0.3)' : 'rgba(255,255,255,0.1)'}; border-radius: 12px; padding: 16px; background: ${hasPasskey ? 'rgba(102, 126, 234, 0.05)' : 'transparent'};">
+                        <div style="display: flex; align-items: flex-start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: ${hasPasskey ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255,255,255,0.05)'}; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                                🔐
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <strong style="color: white; font-size: 16px;">Passkey Authentication</strong>
+                                    ${hasPasskey ? '<span style="background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">ACTIVE</span>' : '<span style="background: rgba(148, 163, 184, 0.2); color: #94a3b8; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">INACTIVE</span>'}
+                                </div>
+                                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 12px;">
+                                    ${hasPasskey 
+                                        ? 'Unlock your wallet with biometrics (Face ID, Touch ID, Windows Hello) or device PIN' 
+                                        : 'Enable biometric authentication for faster and more secure wallet access'}
+                                </p>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    ${hasPasskey ? `
+                                        <button class="btn-danger" onclick="removePasskey()" style="font-size: 14px; padding: 8px 16px;">
+                                            Remove Passkey
+                                        </button>
+                                        <button class="btn-secondary" onclick="testPasskey()" style="font-size: 14px; padding: 8px 16px;">
+                                            Test Authentication
+                                        </button>
+                                    ` : `
+                                        <button class="btn-primary" onclick="setupPasskey()" style="font-size: 14px; padding: 8px 16px;">
+                                            Enable Passkey
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="settings-item" style="border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; background: rgba(239, 68, 68, 0.05);">
+                        <div style="display: flex; align-items: flex-start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                                ⚠️
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="color: white; font-size: 16px; display: block; margin-bottom: 4px;">Passkeys Not Supported</strong>
+                                <p style="color: #94a3b8; font-size: 14px; margin: 0;">
+                                    Your browser or device doesn't support WebAuthn passkeys. Try using a modern browser like Chrome, Safari, or Edge on a device with biometric capabilities.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `}
+            </div>
+            
+            <!-- Password Management Section -->
+            <div class="settings-card" style="margin-top: 24px;">
+                <h3 style="font-size: 18px; color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>🔑</span>
+                    <span>Password Management</span>
+                </h3>
                 
                 <div class="settings-item">
                     <div class="settings-item-info">
@@ -171,7 +245,7 @@ function renderSecuritySettings() {
                         <span>Update the password used to unlock your wallet</span>
                     </div>
                     <div class="settings-item-actions">
-                        <button class="btn-secondary" onclick="changePassword()">Change</button>
+                        <button class="btn-secondary" onclick="changePassword()">Change Password</button>
                     </div>
                 </div>
             </div>
@@ -374,5 +448,63 @@ async function importBackupFile(event) {
     } catch (error) {
         console.error('Import error:', error);
         alert('Failed to import backup. Make sure the password is correct.');
+    }
+}
+
+
+// Passkey Management Functions
+async function setupPasskey() {
+    // Check if supported first
+    if (!passkeyService.isSupported()) {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        let message = 'Passkeys are not supported in this environment.\n\n';
+        
+        if (protocol === 'file:') {
+            message += 'You are using file:// protocol. Please use a local web server instead.';
+        } else if (hostname !== 'localhost' && hostname !== '127.0.0.1' && protocol !== 'https:') {
+            message += `Current URL: ${window.location.href}\n\nPasskeys require:\n- HTTPS (for production)\n- http://localhost or http://127.0.0.1 (for development)\n\nPlease access your site via localhost instead of ${hostname}`;
+        } else {
+            message += 'Your browser may not support WebAuthn passkeys.';
+        }
+        
+        alert(message);
+        return;
+    }
+    
+    const password = prompt('Enter your wallet password to enable passkey:');
+    if (!password) return;
+    
+    try {
+        // Verify password by trying to decrypt wallet
+        await encryptionService.loadWallet(password);
+        
+        // Register passkey
+        await passkeyService.register();
+        await passkeyService.storePasswordForPasskey(password);
+        
+        alert('✅ Passkey enabled! You can now unlock your wallet with biometrics.');
+        document.getElementById('app').innerHTML = renderSettings();
+        
+    } catch (error) {
+        console.error('Passkey setup error:', error);
+        alert('❌ Failed to enable passkey: ' + error.message);
+    }
+}
+
+async function removePasskey() {
+    if (confirm('Are you sure you want to remove passkey authentication?\n\nYou will need to use your password to unlock the wallet.')) {
+        passkeyService.removePasskey();
+        alert('✅ Passkey removed. You will now use password authentication.');
+        document.getElementById('app').innerHTML = renderSettings();
+    }
+}
+
+async function testPasskey() {
+    try {
+        await passkeyService.authenticate();
+        alert('✅ Passkey authentication successful! Your biometric authentication is working correctly.');
+    } catch (error) {
+        alert('❌ Passkey authentication failed: ' + error.message);
     }
 }

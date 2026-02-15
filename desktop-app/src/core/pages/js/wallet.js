@@ -465,7 +465,8 @@ function selectAsset(asset) {
 function handleLock() {
     if (confirm('Lock wallet?')) {
         walletService.lock();
-        router.navigate('/');
+        walletService.wallet = null; // Clear wallet from memory
+        router.navigate('/unlock');
     }
 }
 

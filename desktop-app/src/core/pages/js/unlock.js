@@ -1,7 +1,5 @@
 // Unlock Wallet Page
 function renderUnlock() {
-
-
     return `
         <div class="auth-page">
             <div class="auth-bg">
