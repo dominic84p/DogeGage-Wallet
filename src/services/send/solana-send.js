@@ -15,8 +15,9 @@ async function sendSolana(toAddress, amount) {
         const lamports = Math.floor(parseFloat(amount) * 1000000000);
 
         // Setup Solana connection
-        // Use our secure worker proxy to hide the API key
-        const rpcEndpoint = 'https://wallet-api.therealdominic84plays.workers.dev/api/solana/rpc';
+        // Use Helius RPC endpoint (same as balance checks)
+        const heliusApiKey = '5ac9b25a-b6e1-4157-9723-3dfe6eef1723';
+        const rpcEndpoint = `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
         const connection = new solanaWeb3.Connection(rpcEndpoint, 'confirmed');
 
         // Create keypair from our keys
