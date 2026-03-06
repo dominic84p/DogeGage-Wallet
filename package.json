@@ -24,8 +24,6 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "@heroui/system": "^2.2.5",
-    "@heroui/theme": "^2.2.9",
     "@solana/web3.js": "^1.87.6",
     "bitcoinjs-lib": "^6.1.5",
     "buffer": "^6.0.3",
