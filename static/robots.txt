@@ -1,0 +1,11 @@
+# DogeGage Wallet - Robots.txt
+User-agent: *
+Allow: /
+Disallow: /wallet
+Disallow: /create
+Disallow: /import
+Disallow: /unlock
+Disallow: /settings
+
+# Sitemap
+Sitemap: https://dogegage.com/sitemap.xml

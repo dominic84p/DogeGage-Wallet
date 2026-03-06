@@ -1,0 +1,11 @@
+{
+  "name": "DogeGage Wallet",
+  "short_name": "DogeGage",
+  "description": "Non-custodial multi-chain cryptocurrency wallet",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#9333ea",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "utilities"]
+}
