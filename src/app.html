@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<!-- Primary Meta Tags -->
+	<title>DogeGage Wallet - Secure Multi-Chain Crypto Wallet</title>
+	<meta name="title" content="DogeGage Wallet - Secure Multi-Chain Crypto Wallet" />
+	<meta name="description"
+		content="Non-custodial multi-chain cryptocurrency wallet supporting Bitcoin, Ethereum, Dogecoin, Litecoin, Solana, Tezos, Tron, and Polygon. Your keys, your crypto." />
+	<meta name="keywords"
+		content="crypto wallet, bitcoin wallet, ethereum wallet, dogecoin wallet, multi-chain wallet, non-custodial wallet, web3 wallet, cryptocurrency, blockchain" />
+	<meta name="author" content="DogeGage" />
+	<meta name="robots" content="index, follow" />
+
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://dogegage.com/" />
+	<meta property="og:title" content="DogeGage Wallet - Secure Multi-Chain Crypto Wallet" />
+	<meta property="og:description"
+		content="Non-custodial multi-chain cryptocurrency wallet supporting Bitcoin, Ethereum, Dogecoin, Litecoin, Solana, Tezos, Tron, and Polygon. Your keys, your crypto." />
+	<meta property="og:site_name" content="DogeGage Wallet" />
+
+	<!-- Twitter -->
+	<meta property="twitter:card" content="summary" />
+	<meta property="twitter:url" content="https://dogegage.com/" />
+	<meta property="twitter:title" content="DogeGage Wallet - Secure Multi-Chain Crypto Wallet" />
+	<meta property="twitter:description"
+		content="Non-custodial multi-chain cryptocurrency wallet supporting Bitcoin, Ethereum, Dogecoin, Litecoin, Solana, Tezos, Tron, and Polygon. Your keys, your crypto." />
+
+	<!-- Additional Meta Tags -->
+	<meta name="theme-color" content="#9333ea" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="DogeGage" />
+
+	<!-- PWA Manifest -->
+	<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
+
+	<!-- Security Headers -->
+	<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+	<meta http-equiv="X-Frame-Options" content="DENY" />
+	<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+
+	<!-- Structured Data (JSON-LD) -->
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "DogeGage Wallet",
+			"applicationCategory": "FinanceApplication",
+			"operatingSystem": "Web Browser",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			},
+			"description": "Non-custodial multi-chain cryptocurrency wallet supporting Bitcoin, Ethereum, Dogecoin, Litecoin, Solana, Tezos, Tron, and Polygon.",
+			"featureList": [
+				"Multi-chain support",
+				"Non-custodial",
+				"Encrypted local storage",
+				"Built-in exchange",
+				"Portfolio tracking"
+			]
+		}
+		</script>
+
+	<!-- Load crypto libraries from CDN (same as old desktop app) -->
+	<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bitcoinjs-lib-browser@5.1.7/bitcoinjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/tronweb@6.1.1/dist/TronWeb.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
+	<script src="https://unpkg.com/@solana/web3.js@1.98.4/lib/index.iife.min.js"></script>
+
+	<!-- Load wallet utility scripts from static folder -->
+	<script src="/blake2b-proper.js"></script>
+	<script src="/base58check.js"></script>
+	<script src="/tezos-ed25519.js"></script>
+
+	<script>
+		// Setup crypto libraries (same as old desktop app)
+		window.addEventListener('load', () => {
+			if (window.ethers && window.bitcoinjs) {
+				window.cryptoLibs = {
+					ethers: window.ethers,
+					bitcoin: window.bitcoinjs,
+					tron: window.TronWeb
+				};
+				console.log('✅ Crypto libraries loaded from CDN');
+			}
+		});
+	</script>
+
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
+</html>
