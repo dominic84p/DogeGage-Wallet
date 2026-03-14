@@ -1,111 +1,85 @@
-# DogeGage Wallet
+# Rivara Wallet
 
-A non-custodial, multi-chain cryptocurrency wallet built with SvelteKit. Your keys, your crypto.
+A non-custodial, privacy-focused multi-chain cryptocurrency wallet built with SvelteKit. Your keys, your crypto.
 
-🌐 **Live:** [dogegage.com](https://rivarawallet.xyz)
+🌐 **Live:** [rivarawallet.xyz](https://rivarawallet.xyz)
 
-> ⚠️ **License:** This is **Source Available**, not Open Source. You can view, fork, and modify for personal use. You **cannot** host as a public service or redistribute commercially. See [LICENSE](LICENSE).
+> ⚠️ **License:** Source Available — not Open Source. You can view, fork, and modify for personal use. You **cannot** host as a public service or redistribute commercially. See [LICENSE](LICENSE).
 
-## Supported Cryptocurrencies
+## Supported Chains
 
 - Bitcoin (BTC)
 - Ethereum (ETH)
+- Polygon (POL)
 - Dogecoin (DOGE)
 - Litecoin (LTC)
 - Solana (SOL)
 - Tezos (XTZ)
 - Tron (TRX)
-- Polygon (POL)
 
 ## Features
 
-- **Non-custodial** - Private keys never leave your device
-- **Multi-chain** - 8+ cryptocurrencies in one wallet
-- **Encrypted storage** - AES-GCM 256-bit encryption with PBKDF2
-- **Built-in exchange** - Swap via ChangeNOW
-- **Tuffbackup** - Encrypted wallet backup system
-- **Portfolio tracking** - Real-time balance and price tracking
-- **No KYC** - No registration required
-- **No tracking** - We don't collect data
-- **BIP39 compatible** - Works with other wallets
-- **Strong security** - Rate limiting, password requirements, checksum validation
+- **Non-custodial** — private keys never leave your device
+- **Multi-chain** — 8 cryptocurrencies in one wallet
+- **AES-GCM 256-bit encryption** — PBKDF2 with 100k iterations
+- **Duress password** — shows a decoy wallet under coercion
+- **Private keys tab** — password-gated access to all derived keys
+- **Address book** — auto-detects chain from address format
+- **Tuffbackup** — encrypted backup with HMAC integrity verification, includes address book
+- **Built-in exchange** — swap via ChangeNOW
+- **Portfolio tracking** — real-time balances and price charts
+- **Proxied RPC** — all API calls route through Cloudflare Worker, no keys exposed client-side
+- **No KYC, no tracking, no registration**
+- **BIP39 compatible** — import/export with any standard wallet
 
 ## Tech Stack
 
 - **Frontend:** SvelteKit + TypeScript + Tailwind CSS
-- **Crypto Libraries:** Ethers.js, BitcoinJS, TronWeb, Solana Web3.js
-- **Encryption:** Web Crypto API (AES-GCM + PBKDF2)
-- **APIs:** CoinGecko (prices), ChangeNOW (exchange), Blockchair/BlockCypher (blockchain data)
+- **Crypto:** Ethers.js, BitcoinJS, TweetNaCl, Web Crypto API
+- **Backend:** Cloudflare Worker + KV (price caching, RPC proxy)
+- **APIs:** CoinGecko, ChangeNOW, Helius, Ankr, Blockchair, BlockCypher
 - **Hosting:** Cloudflare Pages
 - **Package Manager:** Bun
 
 ## Running Locally
 
 ```bash
-# Install dependencies
 bun install
-
-# Run dev server
 bun run dev
-
-# Build for production
-bun run build
-
-# Preview production build
-bun run preview
 ```
 
-Then open `http://localhost:5173`
+Open `http://localhost:5173`
 
 ## Project Structure
 
 ```
 ├── src/
-│   ├── routes/              # SvelteKit pages
-│   │   ├── +page.svelte     # Landing page
-│   │   ├── wallet/          # Wallet page
-│   │   ├── create/          # Create wallet
-│   │   ├── import/          # Import wallet
-│   │   ├── portfolio/       # Portfolio view
-│   │   ├── exchange/        # Swap interface
-│   │   └── settings/        # Settings
+│   ├── routes/          # SvelteKit pages
 │   ├── lib/
-│   │   ├── services/        # Blockchain & crypto services
-│   │   ├── stores/          # Svelte stores
-│   │   └── components/      # Reusable components
-│   └── app.html             # HTML template
-├── static/                  # Static assets
-├── desktop-app/             # Legacy vanilla JS version
-└── package.json
+│   │   ├── services/    # Blockchain & crypto services
+│   │   ├── stores/      # Svelte stores
+│   │   └── components/  # UI components
+│   └── app.html
+├── static/              # Static assets & crypto libs
+├── worker.js            # Cloudflare Worker (RPC proxy + price cache)
+└── wrangler.toml        # Cloudflare config
 ```
 
-> **Note:** The API worker is not included in this repo as it contains API keys. The frontend connects to our hosted worker at `wallet-api.therealdominic84plays.workers.dev`.
+## Security
+
+- AES-GCM 256-bit encryption, PBKDF2 100k iterations
+- Min 12 char passwords with complexity requirements
+- Rate limiting on unlock attempts with exponential backoff
+- Checksum address validation for all chains
+- HMAC integrity verification on backup files
+- No server-side storage — everything stays in the browser
+
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## License
 
-**Source Available** - See [LICENSE](LICENSE)
+Source Available — See [LICENSE](LICENSE)
 
-You can view, fork, and modify for personal use. You cannot host as a public service or redistribute commercially.
+---
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to help.
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
-
-## Security
-
-- **Encryption:** AES-GCM 256-bit with PBKDF2 (100k iterations)
-- **Password Requirements:** Min 12 chars, uppercase, lowercase, number, symbol
-- **Rate Limiting:** 5 failed unlock attempts with exponential backoff
-- **Address Validation:** Checksum verification for all chains
-- **No Server Storage:** Everything encrypted locally in browser
-
-See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
-
-## Links
-
-- Website: [dogegage.com](https://dogegage.com)
-- Docs: [dogegage.com/docs](https://dogegage.com/docs)
+Rivara is a product of [DogeGage](https://dogegage.com).
