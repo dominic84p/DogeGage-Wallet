@@ -211,6 +211,33 @@ function validateTezosAddress(address: string): boolean {
 	return validateBase58Check(address);
 }
 
+/**
+ * Detect chain from address format
+ * Returns the chain name or null if unrecognized
+ */
+export function detectChain(address: string): CryptoChain | null {
+	if (!address || address.length < 10) return null;
+	// Tezos: tz1/tz2/tz3
+	if (/^tz[1-3][1-9A-HJ-NP-Za-km-z]{33}$/.test(address)) return 'tezos';
+	// Tron: T + 33 chars
+	if (/^T[A-Za-z1-9]{33}$/.test(address)) return 'tron';
+	// Ethereum / Polygon: 0x + 40 hex
+	if (/^0x[a-fA-F0-9]{40}$/.test(address)) return 'ethereum';
+	// Bitcoin bech32
+	if (/^bc1[a-z0-9]{39,59}$/.test(address)) return 'bitcoin';
+	// Litecoin bech32
+	if (/^ltc1[a-z0-9]{39,59}$/.test(address)) return 'litecoin';
+	// Dogecoin: D + specific chars
+	if (/^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/.test(address)) return 'dogecoin';
+	// Litecoin legacy: L or M
+	if (/^[LM][a-km-zA-HJ-NP-Z1-9]{26,33}$/.test(address)) return 'litecoin';
+	// Bitcoin legacy: 1 or 3
+	if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address)) return 'bitcoin';
+	// Solana: base58, 32-44 chars
+	if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) return 'solana';
+	return null;
+}
+
 export function validateAddress(chain: CryptoChain, address: string): boolean {
 	switch (chain) {
 		case 'bitcoin':

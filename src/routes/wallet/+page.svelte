@@ -10,6 +10,7 @@
 	} from 'lucide-svelte';
 	import { wallet, isUnlocked, isCurrentUnlock, balancesLoading, totalBalance, selectedCurrency, exchangeRates, currencySymbols, convertCurrency, fetchExchangeRates } from '$lib/stores/wallet';
 	import { walletService } from '$lib/services/wallet-service';
+	import { addressBookService } from '$lib/services/address-book-service';
 
 
 
@@ -162,6 +163,20 @@
 	let sendAmount = '';
 	let sendStage: 'form' | 'confirm' | 'sending' | 'error' = 'form';
 	let sendError = '';
+	let showContactPicker = false;
+
+	$: sendContacts = selectedAsset
+		? addressBookService.getByChain(
+			selectedAsset.id === 'BTC' ? 'bitcoin' :
+			selectedAsset.id === 'ETH' ? 'ethereum' :
+			selectedAsset.id === 'POL' ? 'polygon' :
+			selectedAsset.id === 'DOGE' ? 'dogecoin' :
+			selectedAsset.id === 'LTC' ? 'litecoin' :
+			selectedAsset.id === 'SOL' ? 'solana' :
+			selectedAsset.id === 'XTZ' ? 'tezos' :
+			selectedAsset.id === 'TRX' ? 'tron' : ''
+		  )
+		: [];
 
 	function reviewTransaction() {
 		if (!sendAddress.trim()) { sendError = 'Please enter a recipient address'; return; }
@@ -602,7 +617,25 @@
 							<div class="max-w-2xl">
 								{#if sendStage === 'form'}
 									<div class="mb-6">
-										<label class="block text-sm text-slate-400 mb-2.5 font-semibold">Recipient Address</label>
+										<div class="flex items-center justify-between mb-2.5">
+											<label class="block text-sm text-slate-400 font-semibold">Recipient Address</label>
+											{#if sendContacts.length > 0}
+												<button class="text-xs text-cyan-400 hover:text-cyan-300 transition" on:click={() => showContactPicker = !showContactPicker}>
+													📒 Contacts
+												</button>
+											{/if}
+										</div>
+										{#if showContactPicker && sendContacts.length > 0}
+											<div class="mb-2 bg-black/30 border border-white/10 rounded-lg overflow-hidden">
+												{#each sendContacts as c}
+													<button class="w-full px-4 py-2.5 text-left hover:bg-white/5 transition border-b border-white/5 last:border-0"
+														on:click={() => { sendAddress = c.address; showContactPicker = false; }}>
+														<span class="text-white text-sm font-medium">{c.name}</span>
+														<span class="text-slate-500 font-mono text-xs ml-2">{c.address.slice(0, 12)}…</span>
+													</button>
+												{/each}
+											</div>
+										{/if}
 										<input 
 											type="text"
 											bind:value={sendAddress}

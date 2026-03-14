@@ -22,6 +22,7 @@
 	let loading = false;
 	let backupFile: File | null = null;
 	let fileInput: HTMLInputElement;
+	let importNotes = '';
 
 	function goBack() {
 		if (step === 1) {
@@ -44,6 +45,17 @@
 		if (target.files && target.files[0]) {
 			backupFile = target.files[0];
 			error = '';
+			importNotes = '';
+			// Show backup info
+			tuffbackupService.validateBackupFile(backupFile).then(v => {
+				if (v.valid) {
+					const parts = [`v${v.version}`];
+					if (v.hasPrivateKeys) parts.push('includes private keys');
+					if (v.hasAddressBook) parts.push('includes address book');
+					if (v.hasHmac) parts.push('integrity verified');
+					importNotes = parts.join(' · ');
+				}
+			});
 		}
 	}
 
@@ -53,12 +65,6 @@
 
 		if (!backupFile) {
 			error = 'Please select a backup file';
-			return;
-		}
-
-		const pwError1 = validatePasswordStrength(password);
-		if (pwError1) {
-			error = pwError1;
 			return;
 		}
 
@@ -74,15 +80,14 @@
 			}
 
 			// Restore backup
-			const success = await tuffbackupService.restoreBackup(backupFile, password);
-			
-			if (!success) {
-				error = 'Invalid password or corrupted backup file';
-				loading = false;
-				return;
-			}
+			const result = await tuffbackupService.restoreBackup(backupFile, password);
 
-			// Redirect to unlock page
+			// Build success summary
+			const notes: string[] = [];
+			if (result.addressBookRestored) notes.push('address book restored');
+			if (result.privateKeysRestored.length > 0) notes.push(`private keys restored: ${result.privateKeysRestored.join(', ')}`);
+			if (notes.length > 0) importNotes = notes.join(' · ');
+
 			localStorage.setItem('isWalletAlive', 'true');
 			goto('/unlock');
 		} catch (err: any) {
@@ -272,6 +277,9 @@
 							{backupFile ? backupFile.name : 'Choose .rivara or .dogegage file...'}
 						</button>
 						<p class="text-xs text-slate-500 mt-1">Select your Tuffbackup file</p>
+						{#if importNotes}
+							<p class="text-xs text-cyan-400 mt-1">{importNotes}</p>
+						{/if}
 					</div>
 
 					<div>

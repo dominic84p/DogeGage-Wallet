@@ -5,6 +5,9 @@
 	import { tuffbackupService } from '$lib/services/tuffbackup-service';
 	import { walletService } from '$lib/services/wallet-service';
 	import { encryptionService } from '$lib/services/encryption-service';
+	import { addressBookService } from '$lib/services/address-book-service';
+	import type { Contact } from '$lib/services/address-book-service';
+	import { detectChain } from '$lib/services/send';
 	import { isUnlocked } from '$lib/stores/wallet';
 
 	let activeTab = 'general';
@@ -27,6 +30,35 @@
 	let newPassword = '';
 	let newPasswordConfirm = '';
 	let changingPassword = false;
+
+	// Import backup
+	let importFileInput: HTMLInputElement;
+	let showImportPasswordModal = false;
+	let importFile: File | null = null;
+	let importPassword = '';
+	let importingBackup = false;
+	let importFileInfo = '';
+
+	// Address book
+	const chains = ['bitcoin', 'ethereum', 'polygon', 'dogecoin', 'litecoin', 'solana', 'tezos', 'tron'];
+	let contacts: Contact[] = [];
+	let showContactModal = false;
+	let editingContact: Contact | null = null;
+	let contactName = '';
+	let contactAddress = '';
+	let contactChain = 'bitcoin';
+	let contactError = '';
+	let contactChainAutoDetected = false;
+
+	$: {
+		const detected = detectChain(contactAddress);
+		if (detected) {
+			contactChain = detected;
+			contactChainAutoDetected = true;
+		} else {
+			contactChainAutoDetected = false;
+		}
+	}
 
 	// Currency
 	let selectedCurrency = 'USD';
@@ -52,6 +84,8 @@
 		{ id: 'general', label: 'General', icon: '⚙️' },
 		{ id: 'security', label: 'Security', icon: '🔐' },
 		{ id: 'backup', label: 'Backup & Recovery', icon: '💾' },
+		{ id: 'privatekeys', label: 'Private Keys', icon: '🗝️' },
+		{ id: 'addressbook', label: 'Address Book', icon: '📒' },
 		{ id: 'privacy', label: 'Privacy', icon: '🛡️' },
 		{ id: 'danger', label: 'Danger Zone', icon: '⚠️' }
 	];
@@ -76,6 +110,7 @@
 		
 		// Check if duress password is set
 		hasDuressPassword = encryptionService.hasDuressPassword();
+		contacts = addressBookService.getAll();
 	});
 
 	function setCurrency(val: string) {
@@ -116,7 +151,7 @@
 			const encryptedWallet = localStorage.getItem('encryptedWallet');
 			if (!encryptedWallet) { error = 'No wallet found'; downloading = false; return; }
 			await encryptionService.decrypt(encryptedWallet, password);
-			const result = await tuffbackupService.downloadBackup();
+			const result = await tuffbackupService.downloadBackup(password);
 			if (result) {
 				success = 'Backup downloaded successfully!';
 				showPasswordModal = false;
@@ -207,13 +242,10 @@
 		changingPassword = true;
 		error = '';
 		try {
-			// Decrypt with current password
 			const encrypted = localStorage.getItem('encryptedWallet');
 			if (!encrypted) { error = 'No wallet found'; return; }
 			const seed = await encryptionService.decrypt(encrypted, currentPassword);
-			// Re-encrypt with new password
 			await encryptionService.saveWallet(seed, newPassword);
-			// Update session password
 			sessionStorage.setItem('_walletSessionPw', newPassword);
 			success = 'Password changed successfully';
 			showChangePasswordModal = false;
@@ -224,6 +256,189 @@
 		} finally {
 			changingPassword = false;
 		}
+	}
+
+	async function handleImportFileSelect(e: Event) {
+		const target = e.target as HTMLInputElement;
+		if (!target.files?.[0]) return;
+		importFile = target.files[0];
+		importFileInfo = '';
+		const v = await tuffbackupService.validateBackupFile(importFile);
+		if (!v.valid) { error = 'Invalid backup file'; importFile = null; return; }
+		const parts = [`v${v.version}`];
+		if (v.hasPrivateKeys) parts.push('includes private keys');
+		if (v.hasAddressBook) parts.push('includes address book');
+		importFileInfo = parts.join(' · ');
+		showImportPasswordModal = true;
+		importPassword = '';
+		error = '';
+	}
+
+	async function confirmImportBackup() {
+		if (!importFile || !importPassword) { error = 'Enter your backup password'; return; }
+		importingBackup = true;
+		error = '';
+		try {
+			const result = await tuffbackupService.restoreBackup(importFile, importPassword);
+			const notes: string[] = [];
+			if (result.addressBookRestored) notes.push('address book restored');
+			if (result.privateKeysRestored.length > 0) notes.push(`keys restored: ${result.privateKeysRestored.join(', ')}`);
+			success = notes.length > 0 ? notes.join(' · ') : 'Backup imported successfully';
+			showImportPasswordModal = false;
+			importFile = null;
+			importPassword = '';
+			contacts = addressBookService.getAll();
+			setTimeout(() => success = '', 4000);
+		} catch (err: any) {
+			error = err.message || 'Invalid password or corrupted file';
+		} finally {
+			importingBackup = false;
+		}
+	}
+
+	function openAddContact() {
+		editingContact = null;
+		contactName = '';
+		contactAddress = '';
+		contactChain = 'bitcoin';
+		contactChainAutoDetected = false;
+		contactError = '';
+		showContactModal = true;
+	}
+
+	function openEditContact(c: Contact) {
+		editingContact = c;
+		contactName = c.name;
+		contactAddress = c.address;
+		contactChain = c.chain;
+		contactChainAutoDetected = false;
+		contactError = '';
+		showContactModal = true;
+	}
+
+	function saveContact() {
+		if (!contactName.trim()) { contactError = 'Name is required'; return; }
+		if (!contactAddress.trim()) { contactError = 'Address is required'; return; }
+		if (editingContact) {
+			addressBookService.update(editingContact.id, contactName, contactAddress, contactChain);
+		} else {
+			addressBookService.add(contactName, contactAddress, contactChain);
+		}
+		contacts = addressBookService.getAll();
+		showContactModal = false;
+	}
+
+	function deleteContact(id: string) {
+		addressBookService.remove(id);
+		contacts = addressBookService.getAll();
+	}
+
+	// Private keys
+	let pkPassword = '';
+	let pkError = '';
+	let pkAuthed = false;
+	let privateKeys: { chain: string; key: string; visible: boolean }[] = [];
+	let derivingKeys = false;
+	let copiedKey: string | null = null;
+
+	async function revealPrivateKeys() {
+		if (!pkPassword) { pkError = 'Enter your password'; return; }
+		derivingKeys = true;
+		pkError = '';
+		try {
+			const encrypted = localStorage.getItem('encryptedWallet');
+			if (!encrypted) { pkError = 'No wallet found'; derivingKeys = false; return; }
+			const mnemonic = await encryptionService.decrypt(encrypted, pkPassword);
+			// @ts-ignore
+			const { ethers, bitcoin } = window.cryptoLibs;
+			const keys: { chain: string; key: string; visible: boolean }[] = [];
+
+			if (ethers && mnemonic) {
+				// EVM — ETH & Polygon share the same key
+				const evmWallet = ethers.Wallet.fromMnemonic(mnemonic);
+				keys.push({ chain: 'Ethereum', key: evmWallet.privateKey, visible: false });
+				keys.push({ chain: 'Polygon', key: evmWallet.privateKey, visible: false });
+
+				// Tron
+				const tronNode = ethers.utils.HDNode.fromMnemonic(mnemonic).derivePath("m/44'/195'/0'/0/0");
+				keys.push({ chain: 'Tron', key: tronNode.privateKey.slice(2), visible: false });
+
+				// UTXO chains
+				if (bitcoin) {
+					try {
+						const seed = ethers.utils.mnemonicToSeed(mnemonic);
+						const seedBuffer = Buffer.from(seed.slice(2), 'hex');
+						const root = bitcoin.bip32.fromSeed(seedBuffer);
+						keys.push({ chain: 'Bitcoin', key: root.derivePath("m/44'/0'/0'/0/0").privateKey!.toString('hex'), visible: false });
+						keys.push({ chain: 'Dogecoin', key: root.derivePath("m/44'/3'/0'/0/0").privateKey!.toString('hex'), visible: false });
+						keys.push({ chain: 'Litecoin', key: root.derivePath("m/44'/2'/0'/0/0").privateKey!.toString('hex'), visible: false });
+					} catch {}
+				}
+
+				// Solana — Ed25519, first 32 bytes of derived seed as hex
+				try {
+					// @ts-ignore
+					const solKeys = await getTezosEd25519Keys(mnemonic, "m/44'/501'/0'/0'");
+					const solPrivHex = Array.from(solKeys.privateKey.slice(0, 32) as number[])
+						.map((b: number) => b.toString(16).padStart(2, '0')).join('');
+					keys.push({ chain: 'Solana', key: solPrivHex, visible: false });
+				} catch {}
+
+				// Tezos — edsk base58 format
+				try {
+					// @ts-ignore
+					const xtzKeys = await getTezosEd25519Keys(mnemonic, "m/44'/1729'/0'/0'");
+					const seed = xtzKeys.privateKey.slice(0, 32);
+					const edskPrefix = new Uint8Array([13, 15, 58, 7]);
+					const payload = new Uint8Array(edskPrefix.length + seed.length);
+					payload.set(edskPrefix);
+					payload.set(seed, edskPrefix.length);
+					const h1 = ethers.utils.sha256(payload);
+					const h2 = ethers.utils.sha256(h1);
+					const checksum = [0,2,4,6].map((i: number) => parseInt(h2.slice(2+i, 4+i), 16));
+					const final = new Uint8Array(payload.length + 4);
+					final.set(payload);
+					final.set(new Uint8Array(checksum), payload.length);
+					const ALPHA = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+					const digits = [0];
+					for (let i = 0; i < final.length; i++) {
+						let carry = final[i];
+						for (let j = 0; j < digits.length; j++) { carry += digits[j] << 8; digits[j] = carry % 58; carry = (carry / 58) | 0; }
+						while (carry > 0) { digits.push(carry % 58); carry = (carry / 58) | 0; }
+					}
+					let edsk = '';
+					for (let i = 0; i < final.length && final[i] === 0; i++) edsk += ALPHA[0];
+					for (let i = digits.length - 1; i >= 0; i--) edsk += ALPHA[digits[i]];
+					keys.push({ chain: 'Tezos', key: edsk, visible: false });
+				} catch {}
+			}
+
+			privateKeys = keys;
+			pkAuthed = true;
+			pkPassword = '';
+		} catch {
+			pkError = 'Invalid password';
+		} finally {
+			derivingKeys = false;
+		}
+	}
+
+	function toggleKeyVisible(i: number) {
+		privateKeys[i].visible = !privateKeys[i].visible;
+		privateKeys = [...privateKeys];
+	}
+
+	async function copyKey(key: string, chain: string) {
+		await navigator.clipboard.writeText(key);
+		copiedKey = chain;
+		setTimeout(() => copiedKey = null, 2000);
+	}
+
+	function lockPrivateKeys() {
+		pkAuthed = false;
+		privateKeys = [];
+		pkPassword = '';
+		pkError = '';
 	}
 </script>
 
@@ -257,7 +472,7 @@
 				<button
 					class="sidebar-item"
 					class:active={activeTab === tab.id}
-					on:click={() => activeTab = tab.id}
+					on:click={() => { if (activeTab === 'privatekeys' && tab.id !== 'privatekeys') lockPrivateKeys(); activeTab = tab.id; }}
 				>
 					<span class="sidebar-icon">{tab.icon}</span>
 					<span class="sidebar-label">{tab.label}</span>
@@ -370,46 +585,6 @@
 								<button class="btn-secondary" on:click={showChangePassword}>Change</button>
 							</div>
 						</div>
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Password Requirements</strong>
-								<span>12+ characters, uppercase, lowercase, numbers, and symbols</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">Enforced</span>
-							</div>
-						</div>
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Rate Limiting</strong>
-								<span>Exponential lockout after 5 failed unlock attempts</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">Active</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="settings-card mt-6">
-						<h3 class="card-subtitle">🛡️ Encryption</h3>
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Wallet Encryption</strong>
-								<span>AES-256-GCM with PBKDF2 key derivation (100,000 iterations)</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">Active</span>
-							</div>
-						</div>
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Backup Integrity</strong>
-								<span>HMAC-SHA256 verification on all backup files</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">Active</span>
-							</div>
-						</div>
 					</div>
 
 					<div class="settings-card mt-6">
@@ -448,6 +623,17 @@
 
 						<div class="settings-item">
 							<div class="item-info">
+								<strong>Import Tuffbackup</strong>
+								<span>Restore address book and private keys from a .rivara backup file</span>
+							</div>
+							<div class="item-actions">
+								<input type="file" accept=".rivara" bind:this={importFileInput} on:change={handleImportFileSelect} class="hidden" />
+								<button class="btn-secondary" on:click={() => importFileInput.click()}>Import</button>
+							</div>
+						</div>
+
+						<div class="settings-item">
+							<div class="item-info">
 								<strong>View Seed Phrase</strong>
 								<span>Reveal your 12-word recovery phrase — never share this with anyone</span>
 							</div>
@@ -463,44 +649,101 @@
 						</p>
 					</div>
 
+				<!-- ─── Private Keys ─── -->
+				{:else if activeTab === 'privatekeys'}
+					<h2 class="section-title">Private Keys</h2>
+					<p class="section-desc">View your derived private keys — never share these with anyone</p>
+
+					<div class="mt-4 mb-6 p-3 bg-red-500/8 border border-red-500/20 rounded-xl">
+						<p class="text-red-300/90 text-xs leading-relaxed">
+							<strong>⚠️ Danger:</strong> Anyone with your private keys has full control of those funds. Only view these in a secure, private environment.
+						</p>
+					</div>
+
+					{#if !pkAuthed}
+						<div class="settings-card">
+							<p class="text-sm text-slate-400 mb-4">Enter your wallet password to derive and view your private keys.</p>
+							{#if pkError}
+								<div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+									<p class="text-red-200 text-sm">{pkError}</p>
+								</div>
+							{/if}
+							<input type="password" bind:value={pkPassword} placeholder="Enter password"
+								class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 transition-all outline-none mb-4"
+								on:keydown={(e) => e.key === 'Enter' && revealPrivateKeys()} />
+							<button class="w-full px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-cyan-500 transition shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+								disabled={derivingKeys} on:click={revealPrivateKeys}>
+								{derivingKeys ? 'Deriving keys...' : 'Reveal Private Keys'}
+							</button>
+						</div>
+					{:else}
+						<div class="flex justify-end mb-4">
+							<button class="btn-secondary" on:click={lockPrivateKeys}>🔒 Lock Keys</button>
+						</div>
+						<div class="settings-card">
+							{#each privateKeys as pk, i}
+								<div class="settings-item" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+									<div class="flex items-center justify-between w-full">
+										<strong class="text-sm">{pk.chain}</strong>
+										<div class="flex gap-2">
+											<button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" on:click={() => toggleKeyVisible(i)}>
+												{pk.visible ? 'Hide' : 'Show'}
+											</button>
+											<button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" on:click={() => copyKey(pk.key, pk.chain)}>
+												{copiedKey === pk.chain ? '✓ Copied' : 'Copy'}
+											</button>
+										</div>
+									</div>
+									{#if pk.visible}
+										<div class="w-full p-3 bg-black/30 border border-white/10 rounded-lg">
+											<p class="font-mono text-xs text-amber-300 break-all">{pk.key}</p>
+										</div>
+									{:else}
+										<div class="w-full p-3 bg-black/20 border border-white/5 rounded-lg">
+											<p class="font-mono text-xs text-slate-600 tracking-widest">{'•'.repeat(64)}</p>
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+
+				<!-- ─── Address Book ─── -->				{:else if activeTab === 'addressbook'}
+					<h2 class="section-title">Address Book</h2>
+					<p class="section-desc">Save frequently used addresses</p>
+
+					<div class="flex justify-end mb-4">
+						<button class="btn-primary" on:click={openAddContact}>+ Add Contact</button>
+					</div>
+
+					{#if contacts.length === 0}
+						<div class="settings-card">
+							<p class="text-slate-500 text-sm text-center py-8">No contacts yet. Add one to get started.</p>
+						</div>
+					{:else}
+						<div class="settings-card">
+							{#each contacts as contact}
+								<div class="settings-item">
+									<div class="item-info">
+										<strong>{contact.name}</strong>
+										<span class="font-mono text-xs break-all">{contact.address}</span>
+										<span class="text-xs text-slate-600 uppercase">{contact.chain}</span>
+									</div>
+									<div class="item-actions">
+										<button class="btn-secondary" on:click={() => openEditContact(contact)}>Edit</button>
+										<button class="btn-danger" on:click={() => deleteContact(contact.id)}>Delete</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+
 				<!-- ─── Privacy ─── -->
 				{:else if activeTab === 'privacy'}
 					<h2 class="section-title">Privacy</h2>
 					<p class="section-desc">How Rivara handles your data</p>
 
 					<div class="settings-card">
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Data Collection</strong>
-								<span>Rivara collects zero personal data. No analytics, no tracking, no telemetry.</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">None</span>
-							</div>
-						</div>
-
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Key Storage</strong>
-								<span>All keys are encrypted locally on your device using AES-256-GCM. Nothing is ever transmitted.</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.2); background: rgba(74, 222, 128, 0.08);">Local</span>
-							</div>
-						</div>
-
-						<div class="settings-item">
-							<div class="item-info">
-								<strong>Third-Party Services</strong>
-								<span>Only public blockchain RPCs, CoinGecko (prices), and ChangeNow (exchange). No identifying data sent.</span>
-							</div>
-							<div class="item-actions">
-								<span class="settings-badge">Minimal</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="settings-card mt-6">
 						<div class="settings-item">
 							<div class="item-info">
 								<strong>Privacy Policy</strong>
@@ -681,6 +924,70 @@
 					disabled={changingPassword} on:click={changePassword}>
 					{changingPassword ? 'Changing...' : 'Change Password'}
 				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Import Backup Password Modal -->
+{#if showImportPasswordModal}
+	<div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="bg-stone-900 border border-white/10 rounded-2xl p-6 max-w-md w-full">
+			<h3 class="text-xl font-bold text-white mb-2">Import Tuffbackup</h3>
+			{#if importFileInfo}
+				<p class="text-xs text-cyan-400 mb-4">{importFileInfo}</p>
+			{/if}
+			<p class="text-sm text-slate-400 mb-4">Enter the password used when this backup was created.</p>
+			{#if error}
+				<div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+					<p class="text-red-200 text-sm">{error}</p>
+				</div>
+			{/if}
+			<input type="password" bind:value={importPassword} placeholder="Backup password"
+				class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 transition-all outline-none mb-4"
+				on:keydown={(e) => e.key === 'Enter' && confirmImportBackup()} />
+			<div class="flex gap-3">
+				<button class="flex-1 px-4 py-3 bg-stone-800 text-white font-semibold rounded-lg hover:bg-stone-700 transition"
+					disabled={importingBackup}
+					on:click={() => { showImportPasswordModal = false; importFile = null; error = ''; }}>Cancel</button>
+				<button class="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-cyan-500 transition shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+					disabled={importingBackup} on:click={confirmImportBackup}>
+					{importingBackup ? 'Importing...' : 'Import'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Contact Modal -->
+{#if showContactModal}
+	<div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="bg-stone-900 border border-white/10 rounded-2xl p-6 max-w-md w-full">
+			<h3 class="text-xl font-bold text-white mb-4">{editingContact ? 'Edit Contact' : 'Add Contact'}</h3>
+			{#if contactError}
+				<div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+					<p class="text-red-200 text-sm">{contactError}</p>
+				</div>
+			{/if}
+			<input type="text" bind:value={contactName} placeholder="Name"
+				class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 transition-all outline-none mb-3" />
+			<input type="text" bind:value={contactAddress} placeholder="Address"
+				class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white font-mono text-sm placeholder-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 transition-all outline-none mb-3" />
+			<div class="relative mb-4">
+				<select bind:value={contactChain} class="settings-select w-full">
+					{#each chains as c}
+						<option value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+					{/each}
+				</select>
+				{#if contactChainAutoDetected}
+					<span class="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-cyan-400 pointer-events-none">auto-detected</span>
+				{/if}
+			</div>
+			<div class="flex gap-3">
+				<button class="flex-1 px-4 py-3 bg-stone-800 text-white font-semibold rounded-lg hover:bg-stone-700 transition"
+					on:click={() => { showContactModal = false; contactError = ''; }}>Cancel</button>
+				<button class="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-cyan-500 transition shadow-lg shadow-cyan-500/25"
+					on:click={saveContact}>Save</button>
 			</div>
 		</div>
 	</div>
