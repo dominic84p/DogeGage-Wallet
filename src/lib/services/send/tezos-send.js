@@ -61,58 +61,80 @@ class TezosSendService {
         return this.base58Encode(final);
     }
 
+    async isRevealed(address) {
+        const response = await fetch(`${this.rpcUrl}/chains/main/blocks/head/context/contracts/${address}/manager_key`);
+        if (!response.ok) return false;
+        const key = await response.json();
+        return key !== null && key !== '';
+    }
+
+    _encodePublicKey(publicKey) {
+        // edpk prefix for Ed25519
+        const edpkPrefix = new Uint8Array([13, 15, 37, 217]);
+        const payload = new Uint8Array(edpkPrefix.length + publicKey.length);
+        payload.set(edpkPrefix);
+        payload.set(publicKey, edpkPrefix.length);
+        const checksum = this.doubleHash(payload).slice(0, 4);
+        const final = new Uint8Array(payload.length + 4);
+        final.set(payload);
+        final.set(checksum, payload.length);
+        return this.base58Encode(final);
+    }
+
     async sendTransaction(privateKey, toAddress, amountXTZ) {
         try {
-            // Decode private key and derive keypair + address once
             const decoded = this.base58Decode(privateKey);
             const seed = this._extractSeed(decoded);
             const keypair = nacl.sign.keyPair.fromSeed(seed);
             const fromAddress = this._addressFromPublicKey(keypair.publicKey);
 
-            // Get blockchain data
             const blockHash = await this.getBlockHash();
-            const counter = await this.getCounter(fromAddress);
+            let counter = parseInt(await this.getCounter(fromAddress));
             const amountMutez = Math.floor(parseFloat(amountXTZ) * 1000000).toString();
 
-            // Build operation
-            const operation = {
-                branch: blockHash,
-                contents: [{
-                    kind: 'transaction',
-                    source: fromAddress,
-                    fee: '1420',
-                    counter: (parseInt(counter) + 1).toString(),
-                    gas_limit: '10600',
-                    storage_limit: '0',
-                    amount: amountMutez,
-                    destination: toAddress
-                }]
-            };
+            const revealed = await this.isRevealed(fromAddress);
+            const contents = [];
 
-            // Forge operation
+            if (!revealed) {
+                const encodedPk = this._encodePublicKey(keypair.publicKey);
+                contents.push({
+                    kind: 'reveal',
+                    source: fromAddress,
+                    fee: '1270',
+                    counter: (++counter).toString(),
+                    gas_limit: '1100',
+                    storage_limit: '0',
+                    public_key: encodedPk
+                });
+            }
+
+            contents.push({
+                kind: 'transaction',
+                source: fromAddress,
+                fee: '1420',
+                counter: (++counter).toString(),
+                gas_limit: '10600',
+                storage_limit: '0',
+                amount: amountMutez,
+                destination: toAddress
+            });
+
+            const operation = { branch: blockHash, contents };
+
             const forgedHex = await this.forgeOperation(operation);
 
-            // Add watermark (0x03 for generic operation)
             const watermark = new Uint8Array([3]);
             const forgedBytes = this.hexToBytes(forgedHex);
             const toSign = new Uint8Array(watermark.length + forgedBytes.length);
             toSign.set(watermark);
             toSign.set(forgedBytes, watermark.length);
 
-            // Sign
             const signature = nacl.sign.detached(toSign, keypair.secretKey);
             const signatureHex = this.bytesToHex(signature);
-
-            // Build signed operation
             const signedOpBytes = forgedHex + signatureHex;
 
-            // Inject operation
             const opHash = await this.injectOperation(signedOpBytes);
-
-            return {
-                hash: opHash,
-                success: true
-            };
+            return { hash: opHash, success: true };
 
         } catch (error) {
             throw error;
