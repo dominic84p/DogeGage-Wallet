@@ -15,9 +15,8 @@ export async function sendSolana(toAddress, amount) {
         // Convert amount to lamports (1 SOL = 1,000,000,000 lamports)
         const lamports = Math.floor(parseFloat(amount) * 1000000000);
 
-        // Setup Solana connection
-        const heliusApiKey = '5ac9b25a-b6e1-4157-9723-3dfe6eef1723';
-        const rpcEndpoint = `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
+        // Setup Solana connection via worker proxy
+        const rpcEndpoint = 'https://api.rivarawallet.xyz/api/solana/rpc';
         const connection = new solanaWeb3.Connection(rpcEndpoint, 'confirmed');
 
         // Create keypair from our keys

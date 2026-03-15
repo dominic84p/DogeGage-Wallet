@@ -12,8 +12,7 @@ const NETWORKS = {
 	ethereum: {
 		name: 'ethereum',
 		chainId: 1,
-		// Frontend always talks to our worker; backend can use Alchemy/NOWNodes
-		rpcUrl: 'https://api.rivarawallet.xyz/api/infura',
+		rpcUrl: 'https://api.rivarawallet.xyz/api/ethereum/rpc',
 		nativeCurrency: 'ETH',
 		explorer: 'https://etherscan.io/tx/'
 	},
