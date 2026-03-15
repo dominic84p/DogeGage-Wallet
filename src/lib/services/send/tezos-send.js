@@ -83,8 +83,17 @@ class TezosSendService {
 
     async sendTransaction(privateKey, toAddress, amountXTZ) {
         try {
-            const decoded = this.base58Decode(privateKey);
-            const seed = this._extractSeed(decoded);
+            // Derive keypair directly from mnemonic to avoid edsk decode mismatch
+            const mnemonic = await (async () => {
+                const sessionPw = sessionStorage.getItem('_walletSessionPw');
+                if (!sessionPw) throw new Error('Wallet session expired');
+                const { encryptionService } = await import('../encryption-service');
+                return encryptionService.loadWallet(sessionPw);
+            })();
+
+            // @ts-ignore
+            const keys = await getTezosEd25519Keys(mnemonic, "m/44'/1729'/0'/0'");
+            const seed = keys.privateKey.slice(0, 32);
             const keypair = nacl.sign.keyPair.fromSeed(seed);
             const fromAddress = this._addressFromPublicKey(keypair.publicKey);
 
